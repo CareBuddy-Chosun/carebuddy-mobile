@@ -1,0 +1,62 @@
+name: carebuddy
+description: "CareBuddy — Voice-First AI Healthcare Triage Assistant"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Networking
+  dio: ^5.7.0
+  retrofit: ^4.4.1
+
+  # Local storage
+  flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.3.3
+
+  # Voice
+  record: ^5.2.0
+  audioplayers: ^6.1.0
+  speech_to_text: ^7.0.0
+
+  # Maps & Location
+  geolocator: ^13.0.2
+  google_maps_flutter: ^2.10.0
+
+  # UI
+  lottie: ^3.3.1
+  cached_network_image: ^3.4.1
+
+  # Utilities
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  equatable: ^2.0.7
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.14
+  riverpod_generator: ^2.6.3
+  freezed: ^2.5.7
+  json_serializable: ^6.9.0
+  retrofit_generator: ^9.1.5
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/audio/
