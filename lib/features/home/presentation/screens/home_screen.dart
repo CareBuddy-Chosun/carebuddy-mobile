@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/constants/app_theme.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -14,11 +13,9 @@ class HomeScreen extends ConsumerWidget {
         title: const Text('CareBuddy'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await ref.read(authProvider.notifier).logout();
-              if (context.mounted) context.go('/login');
-            },
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => context.go('/profile'),
+            tooltip: 'Profile',
           ),
         ],
       ),

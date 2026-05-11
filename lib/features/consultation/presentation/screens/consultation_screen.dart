@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../providers/consultation_provider.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/voice_input_button.dart';
 import '../widgets/triage_result_banner.dart';
+import '../widgets/quick_reply_buttons.dart';
+import '../widgets/triage_detail_card.dart';
+import '../widgets/emergency_banner.dart';
 
 class ConsultationScreen extends ConsumerStatefulWidget {
   const ConsultationScreen({super.key, this.sessionId});
@@ -46,10 +50,12 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
     });
   }
 
-  Future<void> _sendMessage(String text) async {
+  Future<void> _sendMessage(String text, {String inputType = 'text'}) async {
     if (text.trim().isEmpty) return;
     _textController.clear();
-    await ref.read(consultationProvider.notifier).sendMessage(text.trim());
+    await ref
+        .read(consultationProvider.notifier)
+        .sendMessage(text.trim(), inputType: inputType);
     _scrollToBottom();
   }
 
@@ -57,48 +63,85 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(consultationProvider);
 
+    // Show error as snackbar
+    ref.listen(consultationProvider, (prev, next) {
+      if (next.error != null && next.error != prev?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consultation'),
-        bottom: state.triageResult != null
+        bottom: state.triageResult != null && !state.sessionComplete
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(40),
-                child: TriageResultBanner(result: state.triageResult!),
+                child: TriageResultBanner(result: state.triageResult!.level),
               )
             : null,
       ),
       body: Column(
         children: [
+          // Emergency banner
           if (state.isEmergency)
-            Container(
-              width: double.infinity,
-              color: AppTheme.emergency,
-              padding: const EdgeInsets.all(12),
-              child: const Text(
-                '🚨 EMERGENCY — Call 911 immediately',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
+            EmergencyBanner(
+              onNotifyGuardians: () =>
+                  ref.read(consultationProvider.notifier).notifyGuardians(),
+              onFindHospitals: () => context.go('/hospitals', extra: 'EMERGENCY'),
             ),
+
+          // Messages list
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: state.messages.length,
-              itemBuilder: (context, i) => ChatBubble(message: state.messages[i]),
+              itemBuilder: (context, i) =>
+                  ChatBubble(message: state.messages[i]),
             ),
           ),
+
+          // Triage detail card when session is complete
+          if (state.sessionComplete && state.triageResult != null)
+            TriageDetailCard(
+              triageResult: state.triageResult!,
+              onNotifyGuardians: state.isEmergency
+                  ? () => ref
+                      .read(consultationProvider.notifier)
+                      .notifyGuardians()
+                  : null,
+              onFindHospitals: () => context.go('/hospitals',
+                  extra: state.triageResult!.level),
+            ),
+
+          // Quick reply buttons
+          if (state.quickReplyOptions != null &&
+              state.quickReplyOptions!.isNotEmpty &&
+              !state.sessionComplete)
+            QuickReplyButtons(
+              options: state.quickReplyOptions!,
+              onSelected: (option) =>
+                  _sendMessage(option, inputType: 'button'),
+              enabled: !state.isLoading,
+            ),
+
+          // Loading indicator
           if (state.isLoading)
             const Padding(
               padding: EdgeInsets.all(8),
               child: CircularProgressIndicator(),
             ),
-          _InputBar(
-            controller: _textController,
-            onSend: _sendMessage,
-            onVoiceResult: _sendMessage,
-            isLoading: state.isLoading,
-          ),
+
+          // Input bar (hidden when session complete)
+          if (!state.sessionComplete)
+            _InputBar(
+              controller: _textController,
+              onSend: _sendMessage,
+              onVoiceResult: _sendMessage,
+              isLoading: state.isLoading,
+            ),
         ],
       ),
     );

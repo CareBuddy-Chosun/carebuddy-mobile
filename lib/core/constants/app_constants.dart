@@ -17,8 +17,8 @@ class AppConstants {
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
 
-  // Triage results
-  static const String triageEmergency = 'emergency';
-  static const String triageVisitHospital = 'visit_hospital';
-  static const String triageHomeCare = 'home_care';
+  // Triage results (UPPERCASE to match backend TriageLevel enum values)
+  static const String triageEmergency = 'EMERGENCY';
+  static const String triageVisitHospital = 'VISIT_HOSPITAL';
+  static const String triageHomeCare = 'HOME_CARE';
 }

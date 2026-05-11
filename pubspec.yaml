@@ -20,7 +20,7 @@ dependencies:
 
   # Networking
   dio: ^5.7.0
-  retrofit: ^4.4.1
+  # retrofit removed — using manual Dio repositories instead
 
   # Local storage
   flutter_secure_storage: ^9.2.4
@@ -39,6 +39,10 @@ dependencies:
   lottie: ^3.3.1
   cached_network_image: ^3.4.1
 
+  # Platform
+  url_launcher: ^6.2.0
+  path_provider: ^2.1.0
+
   # Utilities
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
@@ -53,7 +57,7 @@ dev_dependencies:
   riverpod_generator: ^2.6.3
   freezed: ^2.5.7
   json_serializable: ^6.9.0
-  retrofit_generator: ^9.1.5
+  # retrofit_generator removed — not needed
 
 flutter:
   uses-material-design: true

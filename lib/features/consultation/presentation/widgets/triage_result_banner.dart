@@ -10,9 +10,9 @@ class TriageResultBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (result) {
-      AppConstants.triageEmergency => ('🚨 EMERGENCY', AppTheme.emergency),
-      AppConstants.triageVisitHospital => ('🏥 Visit Hospital', AppTheme.warning),
-      AppConstants.triageHomeCare => ('🏠 Home Care', AppTheme.success),
+      AppConstants.triageEmergency => ('EMERGENCY', AppTheme.emergency),
+      AppConstants.triageVisitHospital => ('VISIT HOSPITAL', AppTheme.warning),
+      AppConstants.triageHomeCare => ('HOME CARE', AppTheme.success),
       _ => ('Unknown', AppTheme.textSecondary),
     };
 

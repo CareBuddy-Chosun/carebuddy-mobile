@@ -1,75 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_theme.dart';
-import '../../../../core/network/dio_client.dart';
+import '../providers/history_provider.dart';
+import '../widgets/session_list_tile.dart';
 
-final sessionHistoryProvider = FutureProvider<List<dynamic>>((ref) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get('/sessions');
-  return response.data as List<dynamic>;
-});
-
-class HistoryScreen extends ConsumerWidget {
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final history = ref.watch(sessionHistoryProvider);
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(historyProvider.notifier).loadInitial();
+    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(historyProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(historyProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Past Sessions')),
-      body: history.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (sessions) {
-          if (sessions.isEmpty) {
-            return const Center(
-              child: Text('No sessions yet.\nStart a consultation!',
-                  textAlign: TextAlign.center),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: sessions.length,
-            separatorBuilder: (context, i) => const SizedBox(height: 8),
-            itemBuilder: (context, i) {
-              final session = sessions[i] as Map<String, dynamic>;
-              final triage = session['triage_result'] as String?;
-              final createdAt = session['created_at'] as String;
-              return Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    triage == 'emergency'
-                        ? Icons.emergency
-                        : triage == 'visit_hospital'
-                            ? Icons.local_hospital
-                            : Icons.home,
-                    color: triage == 'emergency'
-                        ? AppTheme.emergency
-                        : triage == 'visit_hospital'
-                            ? AppTheme.warning
-                            : AppTheme.success,
+      body: state.isLoading && state.sessions.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : state.error != null && state.sessions.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(state.error!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () =>
+                            ref.read(historyProvider.notifier).refresh(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
-                  title: Text(
-                    triage?.replaceAll('_', ' ').toUpperCase() ?? 'In Progress',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(createdAt.substring(0, 10)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/consultation',
-                      extra: session['id'] as String),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                )
+              : state.sessions.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No sessions yet.\nStart a consultation!',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () =>
+                          ref.read(historyProvider.notifier).refresh(),
+                      child: ListView.separated(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount:
+                            state.sessions.length + (state.hasMore ? 1 : 0),
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, i) {
+                          if (i >= state.sessions.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+                          final session = state.sessions[i];
+                          return SessionListTile(
+                            session: session,
+                            onTap: () => context.go('/consultation',
+                                extra: session.id),
+                            onDelete: () => ref
+                                .read(historyProvider.notifier)
+                                .deleteSession(session.id),
+                          );
+                        },
+                      ),
+                    ),
     );
   }
 }
