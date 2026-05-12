@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_constants.dart';
@@ -28,6 +30,9 @@ class _AuthInterceptor extends Interceptor {
   final SecureStorage _storage;
   final Dio _dio;
 
+  // Mutex to prevent concurrent refresh requests
+  Completer<TokenPair?>? _refreshCompleter;
+
   @override
   Future<void> onRequest(
     RequestOptions options,
@@ -46,28 +51,64 @@ class _AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     if (err.response?.statusCode == 401) {
-      final refreshToken = await _storage.getRefreshToken();
-      if (refreshToken == null) return handler.next(err);
-
-      try {
-        final response = await _dio.post(
-          '/auth/refresh',
-          data: {'refresh_token': refreshToken},
-          options: Options(headers: {'Authorization': null}),
-        );
-        final newAccess = response.data['access_token'] as String;
-        final newRefresh = response.data['refresh_token'] as String;
-        await _storage.saveTokens(
-          accessToken: newAccess,
-          refreshToken: newRefresh,
-        );
-        err.requestOptions.headers['Authorization'] = 'Bearer $newAccess';
-        final retried = await _dio.fetch(err.requestOptions);
-        return handler.resolve(retried);
-      } catch (_) {
-        await _storage.clearTokens();
+      final tokenPair = await _refreshTokenSafe();
+      if (tokenPair != null) {
+        err.requestOptions.headers['Authorization'] =
+            'Bearer ${tokenPair.accessToken}';
+        try {
+          final retried = await _dio.fetch(err.requestOptions);
+          return handler.resolve(retried);
+        } catch (_) {
+          // Retry failed, fall through to handler.next(err)
+        }
       }
     }
     handler.next(err);
   }
+
+  /// Ensures only one refresh request runs at a time.
+  /// Concurrent 401 errors will wait for the same refresh result.
+  Future<TokenPair?> _refreshTokenSafe() async {
+    if (_refreshCompleter != null) {
+      return _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<TokenPair?>();
+
+    try {
+      final refreshToken = await _storage.getRefreshToken();
+      if (refreshToken == null) {
+        _refreshCompleter!.complete(null);
+        return null;
+      }
+
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+        options: Options(headers: {'Authorization': null}),
+      );
+      final newAccess = response.data['access_token'] as String;
+      final newRefresh = response.data['refresh_token'] as String;
+      await _storage.saveTokens(
+        accessToken: newAccess,
+        refreshToken: newRefresh,
+      );
+
+      final pair = TokenPair(newAccess, newRefresh);
+      _refreshCompleter!.complete(pair);
+      return pair;
+    } catch (_) {
+      await _storage.clearTokens();
+      _refreshCompleter!.complete(null);
+      return null;
+    } finally {
+      _refreshCompleter = null;
+    }
+  }
+}
+
+class TokenPair {
+  const TokenPair(this.accessToken, this.refreshToken);
+  final String accessToken;
+  final String refreshToken;
 }

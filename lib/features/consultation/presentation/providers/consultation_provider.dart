@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/api_exception.dart';
+import '../../../../core/network/session_repository.dart';
+import '../../../../core/services/emergency_detector.dart';
+import '../../../../shared/models/session_models.dart';
 
 class ChatMessage {
-  ChatMessage({required this.role, required this.content});
+  ChatMessage({required this.role, required this.content, this.timestamp});
   final String role;
   final String content;
+  final String? timestamp;
 }
 
 class ConsultationState {
@@ -14,20 +18,32 @@ class ConsultationState {
     this.triageResult,
     this.isEmergency = false,
     this.isLoading = false,
+    this.sessionComplete = false,
+    this.quickReplyOptions,
+    this.ttsText,
+    this.error,
   });
 
   final String? sessionId;
   final List<ChatMessage> messages;
-  final String? triageResult;
+  final TriageResult? triageResult;
   final bool isEmergency;
   final bool isLoading;
+  final bool sessionComplete;
+  final List<String>? quickReplyOptions;
+  final String? ttsText;
+  final String? error;
 
   ConsultationState copyWith({
     String? sessionId,
     List<ChatMessage>? messages,
-    String? triageResult,
+    TriageResult? triageResult,
     bool? isEmergency,
     bool? isLoading,
+    bool? sessionComplete,
+    List<String>? quickReplyOptions,
+    String? ttsText,
+    String? error,
   }) =>
       ConsultationState(
         sessionId: sessionId ?? this.sessionId,
@@ -35,11 +51,16 @@ class ConsultationState {
         triageResult: triageResult ?? this.triageResult,
         isEmergency: isEmergency ?? this.isEmergency,
         isLoading: isLoading ?? this.isLoading,
+        sessionComplete: sessionComplete ?? this.sessionComplete,
+        quickReplyOptions: quickReplyOptions,
+        ttsText: ttsText,
+        error: error,
       );
 }
 
 final consultationProvider =
-    StateNotifierProvider<ConsultationNotifier, ConsultationState>((ref) {
+    StateNotifierProvider.autoDispose<ConsultationNotifier, ConsultationState>(
+        (ref) {
   return ConsultationNotifier(ref);
 });
 
@@ -49,56 +70,119 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
   final Ref _ref;
 
   Future<void> init(String? existingSessionId) async {
-    final dio = _ref.read(dioProvider);
+    final repo = _ref.read(sessionRepositoryProvider);
 
-    if (existingSessionId != null) {
-      state = state.copyWith(sessionId: existingSessionId);
-      return;
-    }
+    try {
+      if (existingSessionId != null) {
+        // Load existing session with full message history
+        final session = await repo.getSession(existingSessionId);
+        final messages = session.messages
+            .map((m) => ChatMessage(
+                  role: m.role,
+                  content: m.content,
+                  timestamp: m.createdAt,
+                ))
+            .toList();
 
-    final response = await dio.post('/sessions');
-    final sessionId = response.data['id'] as String;
+        state = state.copyWith(
+          sessionId: session.id,
+          messages: messages,
+          sessionComplete: session.status != 'active',
+          triageResult: session.triageLevel != null
+              ? TriageResult(level: session.triageLevel!)
+              : null,
+          isEmergency: session.triageLevel == 'EMERGENCY',
+        );
+        return;
+      }
 
-    state = state.copyWith(
-      sessionId: sessionId,
-      messages: [
-        ChatMessage(
+      // Create new session
+      final session = await repo.createSession();
+
+      // If session already has messages (e.g., greeting from backend)
+      final messages = session.messages
+          .map((m) => ChatMessage(
+                role: m.role,
+                content: m.content,
+                timestamp: m.createdAt,
+              ))
+          .toList();
+
+      // Add client-side greeting if no messages exist
+      if (messages.isEmpty) {
+        messages.add(ChatMessage(
           role: 'assistant',
           content:
-              "Hello! I'm CareBuddy. I'm here to help assess your symptoms. Please note: I am not a medical professional and this is not a diagnosis. How are you feeling today?",
-        ),
-      ],
-    );
+              "Hello! I'm CareBuddy. I'm here to help assess your symptoms. "
+              "Please note: I am not a medical professional and this is not a diagnosis. "
+              "How are you feeling today?",
+        ));
+      }
+
+      state = state.copyWith(sessionId: session.id, messages: messages);
+    } catch (e) {
+      final msg = e is ApiException ? e.userMessage : e.toString();
+      state = state.copyWith(error: msg);
+    }
   }
 
-  Future<void> sendMessage(String text) async {
-    if (state.sessionId == null) return;
+  Future<void> sendMessage(String text, {String inputType = 'text'}) async {
+    if (state.sessionId == null || state.sessionComplete) return;
 
-    final dio = _ref.read(dioProvider);
+    final repo = _ref.read(sessionRepositoryProvider);
+
+    // Add user message to UI immediately
     final updated = List<ChatMessage>.from(state.messages)
       ..add(ChatMessage(role: 'user', content: text));
 
-    state = state.copyWith(messages: updated, isLoading: true);
+    // Client-side emergency keyword detection (SRS FR-015)
+    final emergencyKeywords = EmergencyDetector.check(text);
+    final clientEmergency = emergencyKeywords.isNotEmpty;
+
+    state = state.copyWith(
+      messages: updated,
+      isLoading: true,
+      isEmergency: clientEmergency || state.isEmergency,
+      quickReplyOptions: null,
+    );
 
     try {
-      final response = await dio.post('/sessions/chat', data: {
-        'session_id': state.sessionId,
-        'message': text,
-      });
+      final response = await repo.sendMessage(
+        state.sessionId!,
+        content: text,
+        inputType: inputType,
+      );
 
-      final reply = response.data['reply'] as String;
-      final triageResult = response.data['triage_result'] as String?;
-      final isEmergency = response.data['is_emergency'] as bool? ?? false;
+      final newMessages = List<ChatMessage>.from(state.messages)
+        ..add(ChatMessage(
+          role: 'assistant',
+          content: response.reply,
+          timestamp: response.timestamp,
+        ));
 
       state = state.copyWith(
-        messages: List<ChatMessage>.from(state.messages)
-          ..add(ChatMessage(role: 'assistant', content: reply)),
-        triageResult: triageResult ?? state.triageResult,
-        isEmergency: isEmergency,
+        messages: newMessages,
+        triageResult: response.triageResult ?? state.triageResult,
+        isEmergency: response.isEmergency || state.isEmergency,
+        sessionComplete: response.sessionComplete,
+        quickReplyOptions: response.quickReplyOptions,
+        ttsText: response.ttsText,
         isLoading: false,
       );
-    } catch (_) {
-      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      final msg = e is ApiException ? e.userMessage : e.toString();
+      state = state.copyWith(isLoading: false, error: msg);
+    }
+  }
+
+  Future<void> notifyGuardians() async {
+    if (state.sessionId == null) return;
+    final repo = _ref.read(sessionRepositoryProvider);
+    try {
+      await repo.notifyGuardians(state.sessionId!);
+    } catch (e) {
+      final msg = e is ApiException ? e.userMessage : e.toString();
+      state = state.copyWith(error: msg);
     }
   }
 }
