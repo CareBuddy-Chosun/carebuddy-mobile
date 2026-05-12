@@ -1,7 +1,7 @@
-import 'dart:io';
-import 'dart:typed_data';
+import 'dart:io' show File;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -21,6 +21,11 @@ class TtsService {
   Future<void> speak(String text, {VoidCallback? onComplete}) async {
     try {
       final bytes = await _voiceRepo.synthesizeSpeech(text: text);
+      if (bytes.isEmpty) {
+        // Mock backend or empty payload — skip playback but keep the flow.
+        onComplete?.call();
+        return;
+      }
       await _playBytes(bytes);
       onComplete?.call();
     } catch (_) {
@@ -30,10 +35,16 @@ class TtsService {
   }
 
   Future<void> _playBytes(Uint8List bytes) async {
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
-    await file.writeAsBytes(bytes);
-    await _player.play(DeviceFileSource(file.path));
+    if (kIsWeb) {
+      // path_provider/dart:io File aren't supported on web; play bytes directly.
+      await _player.play(BytesSource(bytes));
+    } else {
+      final tempDir = await getTemporaryDirectory();
+      final file = File(
+          '${tempDir.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
+      await file.writeAsBytes(bytes);
+      await _player.play(DeviceFileSource(file.path));
+    }
     // Wait for playback to complete
     await _player.onPlayerComplete.first;
   }

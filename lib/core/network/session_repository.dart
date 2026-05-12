@@ -3,10 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/models/notification_models.dart';
 import '../../shared/models/session_models.dart';
+import '../constants/app_constants.dart';
 import 'api_exception.dart';
 import 'dio_client.dart';
+import 'mock/mock_repositories.dart';
 
 final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
+  if (AppConstants.useMockBackend) {
+    return MockSessionRepository();
+  }
   return SessionRepository(ref.read(dioProvider));
 });
 

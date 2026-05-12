@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/hospital_repository.dart';
 import '../../../../shared/models/hospital_models.dart';
@@ -44,24 +45,36 @@ class HospitalNotifier extends StateNotifier<HospitalState> {
   Future<void> loadNearby({String? triageLevel}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        final requested = await Geolocator.requestPermission();
-        if (requested == LocationPermission.denied ||
-            requested == LocationPermission.deniedForever) {
-          state = state.copyWith(
-            isLoading: false,
-            error: 'Location permission denied. Please enable it in Settings.',
-          );
-          return;
+      double latitude;
+      double longitude;
+
+      if (AppConstants.useMockBackend) {
+        // Skip real GPS in offline/mock mode and use Seoul as the demo origin.
+        latitude = 37.5665;
+        longitude = 126.9780;
+      } else {
+        final permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          final requested = await Geolocator.requestPermission();
+          if (requested == LocationPermission.denied ||
+              requested == LocationPermission.deniedForever) {
+            state = state.copyWith(
+              isLoading: false,
+              error:
+                  'Location permission denied. Please enable it in Settings.',
+            );
+            return;
+          }
         }
+        final position = await Geolocator.getCurrentPosition();
+        latitude = position.latitude;
+        longitude = position.longitude;
       }
 
-      final position = await Geolocator.getCurrentPosition();
       final repo = _ref.read(hospitalRepositoryProvider);
       final response = await repo.searchNearby(
-        latitude: position.latitude,
-        longitude: position.longitude,
+        latitude: latitude,
+        longitude: longitude,
         triageLevel: triageLevel,
       );
 

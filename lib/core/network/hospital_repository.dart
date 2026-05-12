@@ -2,10 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/models/hospital_models.dart';
+import '../constants/app_constants.dart';
 import 'api_exception.dart';
 import 'dio_client.dart';
+import 'mock/mock_repositories.dart';
 
 final hospitalRepositoryProvider = Provider<HospitalRepository>((ref) {
+  if (AppConstants.useMockBackend) {
+    return MockHospitalRepository();
+  }
   return HospitalRepository(ref.read(dioProvider));
 });
 

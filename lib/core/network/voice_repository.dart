@@ -3,10 +3,15 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../constants/app_constants.dart';
 import 'api_exception.dart';
 import 'dio_client.dart';
+import 'mock/mock_repositories.dart';
 
 final voiceRepositoryProvider = Provider<VoiceRepository>((ref) {
+  if (AppConstants.useMockBackend) {
+    return MockVoiceRepository();
+  }
   return VoiceRepository(ref.read(dioProvider));
 });
 
