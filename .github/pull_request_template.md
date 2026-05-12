@@ -1,15 +1,15 @@
 ## Summary
-Brief description of what this PR does.
+Front end authoristion change kindly from Patience to Jihyuk Lee.
 
 ## Related Issue
 Closes #
 
 ## Type of Change
-- [ ] Bug fix
+-
 - [ ] New feature
-- [ ] Refactor
-- [ ] Documentation
-- [ ] Chore (dependency update, config, etc.)
+- [ ] Frontend display change
+
+
 
 ## Changes
 -
