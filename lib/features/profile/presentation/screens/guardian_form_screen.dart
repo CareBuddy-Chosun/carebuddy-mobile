@@ -41,7 +41,7 @@ class _GuardianFormScreenState extends ConsumerState<GuardianFormScreen> {
                   : _relationshipController.text.trim(),
             ),
           );
-      if (mounted) context.go('/profile/guardians');
+      if (mounted) context.pop();
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

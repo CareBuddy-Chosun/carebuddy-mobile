@@ -16,7 +16,7 @@ class GuardianListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Emergency Guardians')),
       floatingActionButton: guardians.length < 2
           ? FloatingActionButton(
-              onPressed: () => context.go('/profile/guardians/add'),
+              onPressed: () => context.push('/profile/guardians/add'),
               child: const Icon(Icons.add),
             )
           : null,

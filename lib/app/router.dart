@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/consultation/presentation/screens/consultation_screen.dart';
+import '../features/history/presentation/screens/history_screen.dart';
 import '../features/history/presentation/screens/session_detail_screen.dart';
 import '../features/hospital/presentation/screens/hospital_screen.dart';
 import '../features/profile/presentation/screens/guardian_list_screen.dart';
 import '../features/profile/presentation/screens/guardian_form_screen.dart';
+import '../features/profile/presentation/screens/profile_screen.dart';
 import 'shell_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -43,6 +45,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           return HospitalScreen(triageLevel: triageLevel);
         },
       ),
+      GoRoute(
+          path: '/history',
+          builder: (context, state) => const HistoryScreen()),
+      GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen()),
       GoRoute(
           path: '/profile/guardians',
           builder: (context, state) => const GuardianListScreen()),

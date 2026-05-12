@@ -89,7 +89,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
             EmergencyBanner(
               onNotifyGuardians: () =>
                   ref.read(consultationProvider.notifier).notifyGuardians(),
-              onFindHospitals: () => context.go('/hospitals', extra: 'EMERGENCY'),
+              onFindHospitals: () => context.push('/hospitals', extra: 'EMERGENCY'),
             ),
 
           // Messages list
@@ -112,7 +112,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
                       .read(consultationProvider.notifier)
                       .notifyGuardians()
                   : null,
-              onFindHospitals: () => context.go('/hospitals',
+              onFindHospitals: () => context.push('/hospitals',
                   extra: state.triageResult!.level),
             ),
 

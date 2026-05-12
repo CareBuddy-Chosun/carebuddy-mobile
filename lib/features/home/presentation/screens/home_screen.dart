@@ -14,7 +14,7 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
-            onPressed: () => context.go('/profile'),
+            onPressed: () => context.push('/profile'),
             tooltip: 'Profile',
           ),
         ],
@@ -39,7 +39,7 @@ class HomeScreen extends ConsumerWidget {
               title: 'Start Consultation',
               subtitle: 'Describe your symptoms by voice or text',
               color: AppTheme.primary,
-              onTap: () => context.go('/consultation'),
+              onTap: () => context.push('/consultation'),
             ),
             const SizedBox(height: 16),
             _ActionCard(
@@ -47,7 +47,7 @@ class HomeScreen extends ConsumerWidget {
               title: 'Past Sessions',
               subtitle: 'Review your consultation history',
               color: AppTheme.textSecondary,
-              onTap: () => context.go('/history'),
+              onTap: () => context.push('/history'),
             ),
             const SizedBox(height: 16),
             _ActionCard(
@@ -55,7 +55,7 @@ class HomeScreen extends ConsumerWidget {
               title: 'Nearby Hospitals',
               subtitle: 'Find hospitals and clinics near you',
               color: AppTheme.success,
-              onTap: () => context.go('/hospitals'),
+              onTap: () => context.push('/hospitals'),
             ),
           ],
         ),

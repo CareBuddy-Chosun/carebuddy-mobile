@@ -87,7 +87,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           final session = state.sessions[i];
                           return SessionListTile(
                             session: session,
-                            onTap: () => context.go('/consultation',
+                            onTap: () => context.push('/consultation',
                                 extra: session.id),
                             onDelete: () => ref
                                 .read(historyProvider.notifier)

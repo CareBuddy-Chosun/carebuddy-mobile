@@ -60,7 +60,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     try {
       final repo = ref.read(sessionRepositoryProvider);
       await repo.deleteSession(widget.sessionId);
-      if (mounted) context.go('/history');
+      if (mounted) context.pop();
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +143,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 explanation: session.triageExplanation,
               ),
               onFindHospitals: () =>
-                  context.go('/hospitals', extra: session.triageLevel),
+                  context.push('/hospitals', extra: session.triageLevel),
             ),
 
           // Messages

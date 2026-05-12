@@ -59,6 +59,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>CareBuddy needs microphone access to transcribe your symptoms.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>CareBuddy uses speech recognition to convert your voice into text.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>CareBuddy uses your location to find nearby hospitals.</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

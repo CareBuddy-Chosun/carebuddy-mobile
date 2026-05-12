@@ -101,7 +101,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('Emergency Guardians'),
               subtitle: Text('${profile.guardians.length}/2 configured'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/profile/guardians'),
+              onTap: () => context.push('/profile/guardians'),
             ),
           ),
           const SizedBox(height: 32),
