@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/language_provider.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/session_repository.dart';
 import '../../../../core/services/emergency_detector.dart';
@@ -151,6 +152,7 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
         state.sessionId!,
         content: text,
         inputType: inputType,
+        language: _ref.read(languageProvider),
       );
 
       final newMessages = List<ChatMessage>.from(state.messages)

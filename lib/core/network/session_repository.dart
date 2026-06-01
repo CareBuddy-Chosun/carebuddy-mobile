@@ -72,6 +72,7 @@ class SessionRepository {
     required String content,
     String inputType = 'text',
     double? audioDurationSeconds,
+    String? language,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -80,6 +81,9 @@ class SessionRepository {
       };
       if (audioDurationSeconds != null) {
         data['audio_duration_seconds'] = audioDurationSeconds;
+      }
+      if (language != null) {
+        data['language'] = language;
       }
       final response = await _dio.post(
         '/sessions/$sessionId/messages',

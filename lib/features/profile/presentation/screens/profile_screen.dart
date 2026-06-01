@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/providers/language_provider.dart';
 import '../../../../shared/models/user_models.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
@@ -90,6 +91,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       UserProfileUpdate(consentDataStorage: value),
                     );
               },
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Language section
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Language / 언어',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Language CareBuddy responds in',
+                    style: TextStyle(
+                        fontSize: 12, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'ko', label: Text('한국어')),
+                      ButtonSegment(value: 'en', label: Text('English')),
+                    ],
+                    selected: {ref.watch(languageProvider)},
+                    onSelectionChanged: (selection) {
+                      ref
+                          .read(languageProvider.notifier)
+                          .setLanguage(selection.first);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
