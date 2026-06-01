@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../features/home/presentation/screens/home_screen.dart';
@@ -27,60 +28,80 @@ class _ShellScreenState extends State<ShellScreen>
     "Patient Profile",
   ];
 
-  // ================= HEALTH IMAGES =================
   final List<String> _headerImages = [
+    // Virus image
     "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?q=80&w=1200&auto=format&fit=crop",
+
+    // Headache image
     "https://images.unsplash.com/photo-1604881991720-f91add269bed?q=80&w=1200&auto=format&fit=crop",
+
+    // Doctor image
     "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?q=80&w=1200&auto=format&fit=crop",
   ];
 
-  late AnimationController _floatingController;
-  late AnimationController _fadeController;
+  // ================= ANIMATIONS =================
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
-  late Animation<double> _floatingAnimation;
-  late Animation<double> _fadeAnimation;
+  late AnimationController _slideController;
+  late Animation<Offset> _slideAnimation;
+
+  late AnimationController _rotateController;
+  late Animation<double> _rotateAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Floating animation
-    _floatingController = AnimationController(
+    // HEART PULSE
+    _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // Fade animation
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..forward();
-
-    _floatingAnimation = Tween<double>(
-      begin: -6,
-      end: 8,
+    _pulseAnimation = Tween<double>(
+      begin: 1,
+      end: 1.12,
     ).animate(
       CurvedAnimation(
-        parent: _floatingController,
+        parent: _pulseController,
         curve: Curves.easeInOut,
       ),
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
+    // HEADER SLIDE
+    _slideController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..forward();
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
     ).animate(
       CurvedAnimation(
-        parent: _fadeController,
-        curve: Curves.easeIn,
+        parent: _slideController,
+        curve: Curves.easeOutExpo,
       ),
     );
+
+    // HEART ROTATION
+    _rotateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
+    _rotateAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(_rotateController);
   }
 
   @override
   void dispose() {
-    _floatingController.dispose();
-    _fadeController.dispose();
+    _pulseController.dispose();
+    _slideController.dispose();
+    _rotateController.dispose();
     super.dispose();
   }
 
@@ -94,317 +115,477 @@ class _ShellScreenState extends State<ShellScreen>
       body: Column(
         children: [
           // ================= ANIMATED HEADER =================
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 700),
-            child: Container(
-              key: ValueKey(_currentIndex),
-              height: 240,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(36),
-                  bottomRight: Radius.circular(36),
-                ),
-                image: DecorationImage(
-                  image: NetworkImage(
-                    _headerImages[_currentIndex],
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
+          SlideTransition(
+            position: _slideAnimation,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 800),
               child: Container(
+                key: ValueKey(_currentIndex),
+                height: 310,
+                width: double.infinity,
+
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(36),
-                    bottomRight: Radius.circular(36),
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
                   ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.25),
-                      Colors.black.withOpacity(0.82),
-                    ],
+
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      _headerImages[_currentIndex],
+                    ),
+                    fit: BoxFit.cover,
                   ),
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 18,
+
+                child: Stack(
+                  children: [
+                    // ================= DARK OVERLAY =================
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            const BorderRadius.only(
+                          bottomLeft:
+                              Radius.circular(40),
+                          bottomRight:
+                              Radius.circular(40),
+                        ),
+
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black
+                                .withOpacity(0.2),
+                            Colors.black
+                                .withOpacity(0.85),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          // ================= TOP BAR =================
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+
+                    // ================= BLUR =================
+                    ClipRRect(
+                      borderRadius:
+                          const BorderRadius.only(
+                        bottomLeft:
+                            Radius.circular(40),
+                        bottomRight:
+                            Radius.circular(40),
+                      ),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(
+                          sigmaX: 1.5,
+                          sigmaY: 1.5,
+                        ),
+                        child: Container(
+                          color: Colors.transparent,
+                        ),
+                      ),
+                    ),
+
+                    // ================= CONTENT =================
+                    SafeArea(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.all(22),
+
+                        child: SingleChildScrollView(
+                          physics:
+                              const NeverScrollableScrollPhysics(),
+
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment
+                                    .start,
+
                             children: [
-                              // Animated health logo
-                              AnimatedBuilder(
-                                animation:
-                                    _floatingAnimation,
-                                builder: (context, child) {
-                                  return Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      _floatingAnimation
-                                          .value,
+                              // ================= TOP BAR =================
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment
+                                        .spaceBetween,
+
+                                children: [
+                                  // ANIMATED HEART
+                                  RotationTransition(
+                                    turns:
+                                        _rotateAnimation,
+
+                                    child:
+                                        ScaleTransition(
+                                      scale:
+                                          _pulseAnimation,
+
+                                      child:
+                                          Container(
+                                        padding:
+                                            const EdgeInsets
+                                                .all(
+                                                    16),
+
+                                        decoration:
+                                            BoxDecoration(
+                                          shape: BoxShape
+                                              .circle,
+
+                                          gradient:
+                                              const LinearGradient(
+                                            colors: [
+                                              Color(
+                                                  0xFF00C6FF),
+                                              Color(
+                                                  0xFF0072FF),
+                                            ],
+                                          ),
+
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors
+                                                  .blue
+                                                  .withOpacity(
+                                                      0.45),
+
+                                              blurRadius:
+                                                  25,
+                                              spreadRadius:
+                                                  3,
+                                            ),
+                                          ],
+                                        ),
+
+                                        child:
+                                            const Icon(
+                                          Icons
+                                              .favorite,
+
+                                          color: Colors
+                                              .white,
+                                          size: 30,
+                                        ),
+                                      ),
                                     ),
+                                  ),
+
+                                  // ================= AVATAR =================
+                                  TweenAnimationBuilder(
+                                    tween:
+                                        Tween<double>(
+                                      begin: 0,
+                                      end: 1,
+                                    ),
+
+                                    duration:
+                                        const Duration(
+                                      milliseconds:
+                                          1200,
+                                    ),
+
+                                    curve: Curves
+                                        .elasticOut,
+
+                                    builder:
+                                        (context,
+                                            value,
+                                            child) {
+                                      return Transform
+                                          .translate(
+                                        offset:
+                                            Offset(
+                                          0,
+                                          (1 -
+                                                  value) *
+                                              -40,
+                                        ),
+
+                                        child:
+                                            Opacity(
+                                          opacity:
+                                              value,
+                                          child:
+                                              child,
+                                        ),
+                                      );
+                                    },
+
+                                    child: Container(
+                                      padding:
+                                          const EdgeInsets
+                                              .all(
+                                                  3),
+
+                                      decoration:
+                                          BoxDecoration(
+                                        shape: BoxShape
+                                            .circle,
+
+                                        border:
+                                            Border.all(
+                                          color: Colors
+                                              .white,
+                                          width: 2,
+                                        ),
+
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors
+                                                .white
+                                                .withOpacity(
+                                                    0.3),
+
+                                            blurRadius:
+                                                20,
+                                          ),
+                                        ],
+                                      ),
+
+                                      child:
+                                          const CircleAvatar(
+                                        radius: 27,
+
+                                        backgroundImage:
+                                            NetworkImage(
+                                          "https://i.pravatar.cc/300",
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(
+                                  height: 30),
+
+                              // ================= TITLE =================
+                              TweenAnimationBuilder(
+                                tween:
+                                    Tween<double>(
+                                  begin: 50,
+                                  end: 0,
+                                ),
+
+                                duration:
+                                    const Duration(
+                                  milliseconds:
+                                      1000,
+                                ),
+
+                                curve:
+                                    Curves.easeOutBack,
+
+                                builder:
+                                    (context,
+                                        value,
+                                        child) {
+                                  return Transform
+                                      .translate(
+                                    offset: Offset(
+                                      value,
+                                      0,
+                                    ),
+
                                     child: child,
                                   );
                                 },
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.all(
-                                          15),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white
-                                        .withOpacity(0.15),
-                                    borderRadius:
-                                        BorderRadius
-                                            .circular(20),
-                                    border: Border.all(
-                                      color:
-                                          Colors.white24,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.cyan
-                                            .withOpacity(
-                                                0.25),
-                                        blurRadius: 20,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons
-                                        .health_and_safety_rounded,
-                                    color: Colors.white,
-                                    size: 30,
+
+                                child: Text(
+                                  _titles[
+                                      _currentIndex],
+
+                                  style: theme
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                    color:
+                                        Colors.white,
+
+                                    fontWeight:
+                                        FontWeight
+                                            .bold,
+
+                                    fontSize: 31,
                                   ),
                                 ),
                               ),
 
-                              // Animated avatar
-                              TweenAnimationBuilder(
-                                tween: Tween<double>(
-                                  begin: 0.8,
-                                  end: 1,
-                                ),
+                              const SizedBox(
+                                  height: 10),
+
+                              // ================= SUBTITLE =================
+                              AnimatedOpacity(
+                                opacity: 1,
+
                                 duration:
                                     const Duration(
-                                        milliseconds:
-                                            800),
-                                curve: Curves.elasticOut,
-                                builder:
-                                    (context, value,
-                                        child) {
-                                  return Transform.scale(
-                                    scale: value,
-                                    child: child,
-                                  );
-                                },
+                                  seconds: 2,
+                                ),
+
+                                child: Text(
+                                  "AI-powered healthcare experience",
+
+                                  style: theme
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                    color: Colors
+                                        .white70,
+
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(
+                                  height: 22),
+
+                              // ================= HEALTH CARD =================
+                              ScaleTransition(
+                                scale:
+                                    _pulseAnimation,
+
                                 child: Container(
                                   padding:
                                       const EdgeInsets
-                                          .all(3),
+                                          .all(18),
+
                                   decoration:
                                       BoxDecoration(
-                                    shape:
-                                        BoxShape.circle,
-                                    border: Border.all(
-                                      color:
-                                          Colors.white,
-                                      width: 2,
+                                    borderRadius:
+                                        BorderRadius
+                                            .circular(
+                                                24),
+
+                                    gradient:
+                                        LinearGradient(
+                                      colors: [
+                                        Colors.white
+                                            .withOpacity(
+                                                0.18),
+
+                                        Colors.white
+                                            .withOpacity(
+                                                0.08),
+                                      ],
                                     ),
+
+                                    border:
+                                        Border.all(
+                                      color: Colors
+                                          .white24,
+                                    ),
+
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors
-                                            .white
+                                            .cyan
                                             .withOpacity(
                                                 0.25),
-                                        blurRadius: 15,
+
+                                        blurRadius:
+                                            25,
                                       ),
                                     ],
                                   ),
-                                  child:
-                                      const CircleAvatar(
-                                    radius: 25,
-                                    backgroundImage:
-                                        NetworkImage(
-                                      "https://i.pravatar.cc/300",
-                                    ),
+
+                                  child: Row(
+                                    children: [
+                                      // HEART ICON
+                                      ScaleTransition(
+                                        scale:
+                                            _pulseAnimation,
+
+                                        child:
+                                            Container(
+                                          padding:
+                                              const EdgeInsets
+                                                  .all(
+                                                      14),
+
+                                          decoration:
+                                              BoxDecoration(
+                                            color: Colors
+                                                .red
+                                                .withOpacity(
+                                                    0.2),
+
+                                            shape: BoxShape
+                                                .circle,
+                                          ),
+
+                                          child:
+                                              const Icon(
+                                            Icons
+                                                .monitor_heart,
+
+                                            color: Colors
+                                                .red,
+
+                                            size: 28,
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                          width: 14),
+
+                                      Expanded(
+                                        child:
+                                            Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment
+                                                  .start,
+
+                                          children: const [
+                                            Text(
+                                              "Live Health Monitoring",
+
+                                              style:
+                                                  TextStyle(
+                                                color:
+                                                    Colors.white,
+
+                                                fontWeight:
+                                                    FontWeight.bold,
+
+                                                fontSize:
+                                                    16,
+                                              ),
+                                            ),
+
+                                            SizedBox(
+                                                height:
+                                                    4),
+
+                                            Text(
+                                              "Tracking symptoms in real-time",
+
+                                              style:
+                                                  TextStyle(
+                                                color:
+                                                    Colors.white70,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const Icon(
+                                        Icons
+                                            .arrow_forward_ios,
+
+                                        color: Colors
+                                            .white,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ],
                           ),
-
-                          const Spacer(),
-
-                          // ================= ANIMATED TITLE =================
-                          TweenAnimationBuilder(
-                            tween: Tween<double>(
-                              begin: 40,
-                              end: 0,
-                            ),
-                            duration:
-                                const Duration(
-                                    milliseconds: 900),
-                            curve: Curves.easeOutBack,
-                            builder:
-                                (context, value, child) {
-                              return Transform.translate(
-                                offset:
-                                    Offset(value, 0),
-                                child: child,
-                              );
-                            },
-                            child: Text(
-                              _titles[_currentIndex],
-                              style: theme
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(
-                                color: Colors.white,
-                                fontWeight:
-                                    FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          TweenAnimationBuilder(
-                            tween: Tween<double>(
-                              begin: 0,
-                              end: 1,
-                            ),
-                            duration:
-                                const Duration(
-                                    milliseconds:
-                                        1200),
-                            builder:
-                                (context, value,
-                                    child) {
-                              return Opacity(
-                                opacity: value,
-                                child: child,
-                              );
-                            },
-                            child: Text(
-                              "AI-powered healthcare experience",
-                              style: theme
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                color: Colors.white70,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // ================= HEALTH STATUS CARD =================
-                          AnimatedContainer(
-                            duration: const Duration(
-                                milliseconds: 700),
-                            padding:
-                                const EdgeInsets.all(
-                                    16),
-                            decoration: BoxDecoration(
-                              color: Colors.white
-                                  .withOpacity(0.15),
-                              borderRadius:
-                                  BorderRadius
-                                      ..circular(22),
-                              border: Border.all(
-                                color: Colors.white24,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black
-                                      .withOpacity(
-                                          0.15),
-                                  blurRadius: 18,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding:
-                                      const EdgeInsets
-                                          .all(12),
-                                  decoration:
-                                      BoxDecoration(
-                                    color: Colors.red
-                                        .withOpacity(
-                                            0.15),
-                                    shape:
-                                        BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.favorite,
-                                    color: Colors.red,
-                                  ),
-                                ),
-
-                                const SizedBox(
-                                    width: 14),
-
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment
-                                            .start,
-                                    children: const [
-                                      Text(
-                                        "Health Status",
-                                        style:
-                                            TextStyle(
-                                          color: Colors
-                                              .white,
-                                          fontWeight:
-                                              FontWeight
-                                                  .bold,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                          height: 4),
-                                      Text(
-                                        "Monitoring symptoms & AI diagnosis",
-                                        style:
-                                            TextStyle(
-                                          color: Colors
-                                              .white70,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const Icon(
-                                  Icons
-                                      .arrow_forward_ios_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
@@ -414,10 +595,13 @@ class _ShellScreenState extends State<ShellScreen>
           Expanded(
             child: AnimatedSwitcher(
               duration:
-                  const Duration(milliseconds: 500),
+                  const Duration(milliseconds: 600),
+
               child: IndexedStack(
                 key: ValueKey(_currentIndex),
+
                 index: _currentIndex,
+
                 children: _screens,
               ),
             ),
@@ -425,38 +609,51 @@ class _ShellScreenState extends State<ShellScreen>
         ],
       ),
 
-      // ================= MODERN NAVIGATION =================
+      // ================= NAVIGATION =================
       bottomNavigationBar: Padding(
         padding:
             const EdgeInsets.fromLTRB(16, 0, 16, 20),
+
         child: Container(
-          height: 86,
+          height: 88,
+
           decoration: BoxDecoration(
             color: Colors.white,
+
             borderRadius:
                 BorderRadius.circular(30),
+
             boxShadow: [
               BoxShadow(
                 color:
                     Colors.black.withOpacity(0.08),
+
                 blurRadius: 25,
+
                 offset: const Offset(0, 10),
               ),
             ],
           ),
+
           child: NavigationBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor:
+                Colors.transparent,
+
             elevation: 0,
+
             selectedIndex: _currentIndex,
+
             indicatorColor:
                 const Color(0xFFE3F2FD),
-            height: 86,
+
+            height: 88,
 
             onDestinationSelected: (i) {
               setState(() {
                 _currentIndex = i;
-                _fadeController.reset();
-                _fadeController.forward();
+
+                _slideController.reset();
+                _slideController.forward();
               });
             },
 
@@ -465,13 +662,19 @@ class _ShellScreenState extends State<ShellScreen>
                 icon: _healthNavIcon(
                   image:
                       "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
-                  selected: _currentIndex == 0,
+
+                  selected:
+                      _currentIndex == 0,
                 ),
-                selectedIcon: _healthNavIcon(
+
+                selectedIcon:
+                    _healthNavIcon(
                   image:
                       "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
+
                   selected: true,
                 ),
+
                 label: "Home",
               ),
 
@@ -479,13 +682,19 @@ class _ShellScreenState extends State<ShellScreen>
                 icon: _healthNavIcon(
                   image:
                       "https://cdn-icons-png.flaticon.com/512/2966/2966480.png",
-                  selected: _currentIndex == 1,
+
+                  selected:
+                      _currentIndex == 1,
                 ),
-                selectedIcon: _healthNavIcon(
+
+                selectedIcon:
+                    _healthNavIcon(
                   image:
                       "https://cdn-icons-png.flaticon.com/512/2966/2966480.png",
+
                   selected: true,
                 ),
+
                 label: "History",
               ),
 
@@ -493,13 +702,19 @@ class _ShellScreenState extends State<ShellScreen>
                 icon: _healthNavIcon(
                   image:
                       "https://cdn-icons-png.flaticon.com/512/387/387561.png",
-                  selected: _currentIndex == 2,
+
+                  selected:
+                      _currentIndex == 2,
                 ),
-                selectedIcon: _healthNavIcon(
+
+                selectedIcon:
+                    _healthNavIcon(
                   image:
                       "https://cdn-icons-png.flaticon.com/512/387/387561.png",
+
                   selected: true,
                 ),
+
                 label: "Profile",
               ),
             ],
@@ -509,37 +724,50 @@ class _ShellScreenState extends State<ShellScreen>
     );
   }
 
-  // ================= ANIMATED NAV ICON =================
+  // ================= NAV ICON =================
   Widget _healthNavIcon({
     required String image,
     required bool selected,
   }) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration:
+          const Duration(milliseconds: 300),
+
       curve: Curves.easeOutBack,
+
       padding: const EdgeInsets.all(8),
+
       decoration: BoxDecoration(
         color: selected
             ? const Color(0xFFD9F0FF)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
+
+        borderRadius:
+            BorderRadius.circular(18),
+
         boxShadow: selected
             ? [
                 BoxShadow(
-                  color:
-                      Colors.blue.withOpacity(0.2),
+                  color: Colors.blue
+                      .withOpacity(0.2),
+
                   blurRadius: 15,
                 ),
               ]
             : [],
       ),
+
       child: AnimatedScale(
         duration:
             const Duration(milliseconds: 300),
+
         scale: selected ? 1.15 : 1,
+
         child: Image.network(
           image,
+
           width: selected ? 32 : 25,
+
           height: selected ? 32 : 25,
         ),
       ),
