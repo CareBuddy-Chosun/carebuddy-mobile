@@ -22,6 +22,7 @@ class HospitalRepository {
     required double latitude,
     required double longitude,
     String? triageLevel,
+    String? department,
     double radiusKm = 10.0,
     int limit = 5,
   }) async {
@@ -33,6 +34,9 @@ class HospitalRepository {
         'limit': limit,
       };
       if (triageLevel != null) params['triage_level'] = triageLevel;
+      if (department != null && department.isNotEmpty) {
+        params['department'] = department;
+      }
 
       final response = await _dio.get(
         '/hospitals/nearby',

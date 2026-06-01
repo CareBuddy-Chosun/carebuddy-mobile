@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/services/tts_service.dart';
 import '../../../../core/services/voice_flow_controller.dart';
@@ -31,6 +32,10 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
   // Single STT instance for the whole screen so manual + hands-free share it
   // and never run two listen sessions at once.
   final SpeechToText _stt = SpeechToText();
+
+  // Captured in initState so dispose() can stop audio without touching `ref`
+  // (which can be unsafe during teardown and would leave TTS playing).
+  late final TtsService _tts;
   bool _sttAvailable = false;
   bool _sttInitTried = false;
 
@@ -60,6 +65,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
   @override
   void initState() {
     super.initState();
+    _tts = ref.read(ttsServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(consultationProvider.notifier).init(widget.sessionId);
     });
@@ -75,7 +81,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           // back to manual rather than crashing or looping.
           if (!mounted) return;
           setState(() {
-            _sttHint = 'Voice input unavailable. You can type instead.';
+            _sttHint = ref.read(stringsProvider).sttUnavailableType;
             if (_flow == VoiceFlowState.listening) {
               _flow = VoiceFlowState.idle;
             }
@@ -89,7 +95,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
     if (!mounted) return;
     setState(() {
       if (!_sttAvailable) {
-        _sttHint = 'Microphone/speech not available. You can type instead.';
+        _sttHint = ref.read(stringsProvider).sttNoMicType;
       }
     });
   }
@@ -100,7 +106,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
     _scrollController.dispose();
     // Tear down audio so nothing keeps playing/listening after we leave.
     _stt.cancel();
-    ref.read(ttsServiceProvider).stop();
+    _tts.stop();
     super.dispose();
   }
 
@@ -140,12 +146,19 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
     try {
       await ref.read(ttsServiceProvider).speak(text, lang: _ttsLang);
     } finally {
-      // TTS completion callback path: only here do we (re)enable the mic.
+      // Playback finished: clear the ttsPlaying state first, otherwise
+      // _startListening()'s "never listen during playback" guard would block
+      // the auto mic-on. Only here do we (re)enable the mic.
       if (mounted) {
-        if (_voiceMode) {
-          await _startListening();
-        } else {
+        if (_flow == VoiceFlowState.ttsPlaying) {
           setState(() => _flow = VoiceFlowState.idle);
+        }
+        if (_voiceMode) {
+          // Let the audio pipeline settle after TTS before opening the mic;
+          // starting recognition too eagerly (especially the first time, right
+          // after the greeting) makes it miss the user's opening words.
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted && _voiceMode) await _startListening();
         }
       }
     }
@@ -182,7 +195,11 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
       await _stt.listen(
         onResult: _onSpeechResult,
         listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3),
+        // Silence after which we treat the utterance as finished. 2s is a
+        // balance: snappier than the original 3s, but long enough to tolerate
+        // the natural mid-sentence pause in phrases like "나 ... 머리아파"
+        // (1.5s cut those off).
+        pauseFor: const Duration(seconds: 2),
         localeId: _sttLocale,
         listenOptions: SpeechListenOptions(partialResults: true),
       );
@@ -190,7 +207,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
       if (!mounted) return;
       setState(() {
         _flow = VoiceFlowState.idle;
-        _sttHint = 'Could not start microphone. You can type instead.';
+        _sttHint = ref.read(stringsProvider).sttCouldNotStartType;
       });
     }
   }
@@ -269,6 +286,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(consultationProvider);
+    final t = ref.watch(stringsProvider);
 
     ref.listen(consultationProvider, (prev, next) {
       if (next.error != null && next.error != prev?.error) {
@@ -293,16 +311,16 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Consultation'),
+        title: Text(t.consultationTitle),
         actions: [
           IconButton(
             icon: Icon(_voiceMode ? Icons.record_voice_over : Icons.voice_over_off),
-            tooltip: _voiceMode ? 'Hands-free: On' : 'Hands-free: Off',
+            tooltip: _voiceMode ? t.handsFreeOn : t.handsFreeOff,
             onPressed: _toggleVoiceMode,
           ),
           IconButton(
             icon: Icon(_ttsEnabled ? Icons.volume_up : Icons.volume_off),
-            tooltip: _ttsEnabled ? 'TTS On' : 'TTS Off',
+            tooltip: _ttsEnabled ? t.ttsOn : t.ttsOff,
             onPressed: () {
               setState(() => _ttsEnabled = !_ttsEnabled);
               if (!_ttsEnabled) _stopSpeaking();
@@ -311,7 +329,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           if (_isSpeaking)
             IconButton(
               icon: const Icon(Icons.stop_circle),
-              tooltip: 'Stop speaking',
+              tooltip: t.stopSpeaking,
               onPressed: _stopSpeaking,
             ),
         ],
@@ -329,7 +347,8 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
             EmergencyBanner(
               onNotifyGuardians: () =>
                   ref.read(consultationProvider.notifier).notifyGuardians(),
-              onFindHospitals: () => context.push('/hospitals', extra: 'EMERGENCY'),
+              onFindHospitals: () => context.push('/hospitals',
+                  extra: {'level': 'EMERGENCY', 'department': null}),
             ),
 
           // Messages list
@@ -352,8 +371,10 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
                       .read(consultationProvider.notifier)
                       .notifyGuardians()
                   : null,
-              onFindHospitals: () => context.push('/hospitals',
-                  extra: state.triageResult!.level),
+              onFindHospitals: () => context.push('/hospitals', extra: {
+                'level': state.triageResult!.level,
+                'department': state.triageResult!.recommendedDepartment,
+              }),
             ),
 
           // Quick reply buttons
@@ -376,7 +397,8 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
 
           // Live listening / transcript bar (FR-008)
           if (_isListening && !state.sessionComplete)
-            _ListeningBar(transcript: _partialTranscript),
+            _ListeningBar(
+                transcript: _partialTranscript, listeningLabel: t.listening),
 
           // STT-unavailable hint
           if (_sttHint != null && !state.sessionComplete)
@@ -393,10 +415,12 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
             _InputBar(
               controller: _textController,
               onSend: _sendMessage,
+              hintText: t.typeYourSymptoms,
               isLoading: state.isLoading,
-              // In hands-free mode the loop drives the mic, so the manual mic
-              // button is hidden; otherwise show tap-to-talk.
-              showManualMic: !_voiceMode,
+              // The mic button is always present. In hands-free mode the loop
+              // drives the mic automatically; the button still lets the user
+              // start/stop listening manually at any time.
+              showManualMic: true,
               isListening: _isListening,
               micEnabled: _sttAvailable,
               onToggleMic: _toggleManualMic,
@@ -409,9 +433,10 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
 
 /// Live partial-transcript bar shown above the input while the mic is open.
 class _ListeningBar extends StatelessWidget {
-  const _ListeningBar({required this.transcript});
+  const _ListeningBar({required this.transcript, required this.listeningLabel});
 
   final String transcript;
+  final String listeningLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -425,7 +450,7 @@ class _ListeningBar extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              transcript.isEmpty ? 'Listening…' : transcript,
+              transcript.isEmpty ? listeningLabel : transcript,
               style: TextStyle(
                 fontStyle:
                     transcript.isEmpty ? FontStyle.italic : FontStyle.normal,
@@ -443,6 +468,7 @@ class _InputBar extends StatelessWidget {
   const _InputBar({
     required this.controller,
     required this.onSend,
+    required this.hintText,
     required this.isLoading,
     required this.showManualMic,
     required this.isListening,
@@ -452,6 +478,7 @@ class _InputBar extends StatelessWidget {
 
   final TextEditingController controller;
   final Future<void> Function(String) onSend;
+  final String hintText;
   final bool isLoading;
   final bool showManualMic;
   final bool isListening;
@@ -480,7 +507,7 @@ class _InputBar extends StatelessWidget {
               controller: controller,
               enabled: !isLoading,
               decoration: InputDecoration(
-                hintText: 'Type your symptoms...',
+                hintText: hintText,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none),

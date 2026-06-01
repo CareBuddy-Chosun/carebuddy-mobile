@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../shared/models/session_models.dart';
 
-class TriageDetailCard extends StatelessWidget {
+class TriageDetailCard extends ConsumerWidget {
   const TriageDetailCard({
     super.key,
     required this.triageResult,
@@ -16,12 +18,16 @@ class TriageDetailCard extends StatelessWidget {
   final VoidCallback? onFindHospitals;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(stringsProvider);
     final (label, color, icon) = switch (triageResult.level) {
-      AppConstants.triageEmergency => ('EMERGENCY', AppTheme.emergency, Icons.emergency),
-      AppConstants.triageVisitHospital => ('VISIT HOSPITAL', AppTheme.warning, Icons.local_hospital),
-      AppConstants.triageHomeCare => ('HOME CARE', AppTheme.success, Icons.home),
-      _ => ('ASSESSMENT', Colors.grey, Icons.info),
+      AppConstants.triageEmergency =>
+        (t.triageEmergency, AppTheme.emergency, Icons.emergency),
+      AppConstants.triageVisitHospital =>
+        (t.triageVisitHospitalShort, AppTheme.warning, Icons.local_hospital),
+      AppConstants.triageHomeCare =>
+        (t.triageHomeCareShort, AppTheme.success, Icons.home),
+      _ => (t.triageAssessment, Colors.grey, Icons.info),
     };
 
     return Card(
@@ -55,7 +61,8 @@ class TriageDetailCard extends StatelessWidget {
             ],
             if (triageResult.nextSteps.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text('Next Steps:', style: TextStyle(fontWeight: FontWeight.w600)),
+              Text(t.nextSteps,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               ...triageResult.nextSteps.map((step) => Padding(
                     padding: const EdgeInsets.only(left: 8, top: 2),
@@ -77,7 +84,7 @@ class TriageDetailCard extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onNotifyGuardians,
                   icon: const Icon(Icons.notifications_active),
-                  label: const Text('Notify Guardians'),
+                  label: Text(t.notifyGuardians),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.emergency,
                     foregroundColor: Colors.white,
@@ -92,7 +99,7 @@ class TriageDetailCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onFindHospitals,
                   icon: const Icon(Icons.local_hospital),
-                  label: const Text('Find Nearby Hospitals'),
+                  label: Text(t.findNearbyHospitals),
                 ),
               ),
             ],

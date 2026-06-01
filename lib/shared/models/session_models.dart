@@ -22,6 +22,7 @@ class TriageResult with _$TriageResult {
   const factory TriageResult({
     required String level,
     String? explanation,
+    String? recommendedDepartment,
     @Default([]) List<String> nextSteps,
     @Default(
       'This is not a medical diagnosis. CareBuddy is a triage assistance tool only. '

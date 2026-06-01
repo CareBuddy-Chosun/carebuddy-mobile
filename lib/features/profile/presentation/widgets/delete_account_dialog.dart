@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/l10n/app_strings.dart';
 
-class DeleteAccountDialog extends StatefulWidget {
+class DeleteAccountDialog extends ConsumerStatefulWidget {
   const DeleteAccountDialog({super.key});
 
   @override
-  State<DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+  ConsumerState<DeleteAccountDialog> createState() =>
+      _DeleteAccountDialogState();
 }
 
-class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
+class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
   final _passwordController = TextEditingController();
 
   @override
@@ -18,23 +21,23 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(stringsProvider);
     return AlertDialog(
-      title: const Text('Delete Account'),
+      title: Text(t.deleteAccount),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'This action is permanent and cannot be undone. '
-            'All your data will be deleted.',
-            style: TextStyle(color: Colors.red),
+          Text(
+            t.deleteAccountWarning,
+            style: const TextStyle(color: Colors.red),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _passwordController,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Enter your password to confirm',
+            decoration: InputDecoration(
+              labelText: t.enterPasswordToConfirm,
             ),
           ),
         ],
@@ -42,7 +45,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(t.cancel),
         ),
         TextButton(
           onPressed: () {
@@ -50,7 +53,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
               Navigator.pop(context, _passwordController.text);
             }
           },
-          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          child: Text(t.delete, style: const TextStyle(color: Colors.red)),
         ),
       ],
     );

@@ -269,6 +269,7 @@ TriageResult _$TriageResultFromJson(Map<String, dynamic> json) {
 mixin _$TriageResult {
   String get level => throw _privateConstructorUsedError;
   String? get explanation => throw _privateConstructorUsedError;
+  String? get recommendedDepartment => throw _privateConstructorUsedError;
   List<String> get nextSteps => throw _privateConstructorUsedError;
   String get disclaimer => throw _privateConstructorUsedError;
   List<String> get emergencyKeywordsDetected =>
@@ -294,6 +295,7 @@ abstract class $TriageResultCopyWith<$Res> {
   $Res call({
     String level,
     String? explanation,
+    String? recommendedDepartment,
     List<String> nextSteps,
     String disclaimer,
     List<String> emergencyKeywordsDetected,
@@ -317,6 +319,7 @@ class _$TriageResultCopyWithImpl<$Res, $Val extends TriageResult>
   $Res call({
     Object? level = null,
     Object? explanation = freezed,
+    Object? recommendedDepartment = freezed,
     Object? nextSteps = null,
     Object? disclaimer = null,
     Object? emergencyKeywordsDetected = null,
@@ -330,6 +333,10 @@ class _$TriageResultCopyWithImpl<$Res, $Val extends TriageResult>
             explanation: freezed == explanation
                 ? _value.explanation
                 : explanation // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            recommendedDepartment: freezed == recommendedDepartment
+                ? _value.recommendedDepartment
+                : recommendedDepartment // ignore: cast_nullable_to_non_nullable
                       as String?,
             nextSteps: null == nextSteps
                 ? _value.nextSteps
@@ -361,6 +368,7 @@ abstract class _$$TriageResultImplCopyWith<$Res>
   $Res call({
     String level,
     String? explanation,
+    String? recommendedDepartment,
     List<String> nextSteps,
     String disclaimer,
     List<String> emergencyKeywordsDetected,
@@ -383,6 +391,7 @@ class __$$TriageResultImplCopyWithImpl<$Res>
   $Res call({
     Object? level = null,
     Object? explanation = freezed,
+    Object? recommendedDepartment = freezed,
     Object? nextSteps = null,
     Object? disclaimer = null,
     Object? emergencyKeywordsDetected = null,
@@ -396,6 +405,10 @@ class __$$TriageResultImplCopyWithImpl<$Res>
         explanation: freezed == explanation
             ? _value.explanation
             : explanation // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        recommendedDepartment: freezed == recommendedDepartment
+            ? _value.recommendedDepartment
+            : recommendedDepartment // ignore: cast_nullable_to_non_nullable
                   as String?,
         nextSteps: null == nextSteps
             ? _value._nextSteps
@@ -420,6 +433,7 @@ class _$TriageResultImpl implements _TriageResult {
   const _$TriageResultImpl({
     required this.level,
     this.explanation,
+    this.recommendedDepartment,
     final List<String> nextSteps = const [],
     this.disclaimer =
         'This is not a medical diagnosis. CareBuddy is a triage assistance tool only. '
@@ -435,6 +449,8 @@ class _$TriageResultImpl implements _TriageResult {
   final String level;
   @override
   final String? explanation;
+  @override
+  final String? recommendedDepartment;
   final List<String> _nextSteps;
   @override
   @JsonKey()
@@ -459,7 +475,7 @@ class _$TriageResultImpl implements _TriageResult {
 
   @override
   String toString() {
-    return 'TriageResult(level: $level, explanation: $explanation, nextSteps: $nextSteps, disclaimer: $disclaimer, emergencyKeywordsDetected: $emergencyKeywordsDetected)';
+    return 'TriageResult(level: $level, explanation: $explanation, recommendedDepartment: $recommendedDepartment, nextSteps: $nextSteps, disclaimer: $disclaimer, emergencyKeywordsDetected: $emergencyKeywordsDetected)';
   }
 
   @override
@@ -470,6 +486,8 @@ class _$TriageResultImpl implements _TriageResult {
             (identical(other.level, level) || other.level == level) &&
             (identical(other.explanation, explanation) ||
                 other.explanation == explanation) &&
+            (identical(other.recommendedDepartment, recommendedDepartment) ||
+                other.recommendedDepartment == recommendedDepartment) &&
             const DeepCollectionEquality().equals(
               other._nextSteps,
               _nextSteps,
@@ -488,6 +506,7 @@ class _$TriageResultImpl implements _TriageResult {
     runtimeType,
     level,
     explanation,
+    recommendedDepartment,
     const DeepCollectionEquality().hash(_nextSteps),
     disclaimer,
     const DeepCollectionEquality().hash(_emergencyKeywordsDetected),
@@ -511,6 +530,7 @@ abstract class _TriageResult implements TriageResult {
   const factory _TriageResult({
     required final String level,
     final String? explanation,
+    final String? recommendedDepartment,
     final List<String> nextSteps,
     final String disclaimer,
     final List<String> emergencyKeywordsDetected,
@@ -523,6 +543,8 @@ abstract class _TriageResult implements TriageResult {
   String get level;
   @override
   String? get explanation;
+  @override
+  String? get recommendedDepartment;
   @override
   List<String> get nextSteps;
   @override

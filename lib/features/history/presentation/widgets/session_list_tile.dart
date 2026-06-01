@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../shared/models/session_models.dart';
 
-class SessionListTile extends StatelessWidget {
+class SessionListTile extends ConsumerWidget {
   const SessionListTile({
     super.key,
     required this.session,
@@ -16,7 +18,8 @@ class SessionListTile extends StatelessWidget {
   final VoidCallback? onDelete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(stringsProvider);
     final (icon, color) = switch (session.triageLevel) {
       AppConstants.triageEmergency => (Icons.emergency, AppTheme.emergency),
       AppConstants.triageVisitHospital =>
@@ -25,9 +28,14 @@ class SessionListTile extends StatelessWidget {
       _ => (Icons.chat_bubble_outline, AppTheme.textSecondary),
     };
 
-    final title = session.primarySymptomTag ??
-        session.triageLevel?.replaceAll('_', ' ') ??
-        'In Progress';
+    final triageLabel = switch (session.triageLevel) {
+      AppConstants.triageEmergency => t.triageEmergency,
+      AppConstants.triageVisitHospital => t.triageVisitHospitalShort,
+      AppConstants.triageHomeCare => t.triageHomeCareShort,
+      _ => null,
+    };
+
+    final title = session.primarySymptomTag ?? triageLabel ?? t.inProgress;
     final subtitle =
         session.startedAt != null ? session.startedAt!.substring(0, 10) : '';
 
@@ -48,7 +56,7 @@ class SessionListTile extends StatelessWidget {
             Text(subtitle),
             if (session.durationSeconds != null) ...[
               const Text(' \u00b7 '),
-              Text('${(session.durationSeconds! / 60).ceil()} min'),
+              Text(t.minutesShort((session.durationSeconds! / 60).ceil())),
             ],
           ],
         ),
@@ -71,17 +79,16 @@ class SessionListTile extends StatelessWidget {
           return await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('Delete Session'),
-              content:
-                  const Text('This will permanently delete this session.'),
+              title: Text(t.deleteSession),
+              content: Text(t.deleteSessionListContent),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('Cancel')),
+                    child: Text(t.cancel)),
                 TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('Delete',
-                        style: TextStyle(color: Colors.red))),
+                    child: Text(t.delete,
+                        style: const TextStyle(color: Colors.red))),
               ],
             ),
           );

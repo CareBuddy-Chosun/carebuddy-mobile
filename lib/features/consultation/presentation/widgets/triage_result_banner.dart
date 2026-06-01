@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 
-class TriageResultBanner extends StatelessWidget {
+class TriageResultBanner extends ConsumerWidget {
   const TriageResultBanner({super.key, required this.result});
 
   final String result;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(stringsProvider);
     final (label, color) = switch (result) {
-      AppConstants.triageEmergency => ('EMERGENCY', AppTheme.emergency),
-      AppConstants.triageVisitHospital => ('VISIT HOSPITAL', AppTheme.warning),
-      AppConstants.triageHomeCare => ('HOME CARE', AppTheme.success),
-      _ => ('Unknown', AppTheme.textSecondary),
+      AppConstants.triageEmergency => (t.triageEmergency, AppTheme.emergency),
+      AppConstants.triageVisitHospital =>
+        (t.triageVisitHospitalShort, AppTheme.warning),
+      AppConstants.triageHomeCare => (t.triageHomeCareShort, AppTheme.success),
+      _ => (t.triageUnknown, AppTheme.textSecondary),
     };
 
     return Container(

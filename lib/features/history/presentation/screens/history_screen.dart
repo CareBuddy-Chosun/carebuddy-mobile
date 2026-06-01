@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../providers/history_provider.dart';
 import '../widgets/session_list_tile.dart';
 
@@ -39,9 +40,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(historyProvider);
+    final t = ref.watch(stringsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Past Sessions')),
+      appBar: AppBar(title: Text(t.historyTitle)),
       body: state.isLoading && state.sessions.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : state.error != null && state.sessions.isEmpty
@@ -54,15 +56,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       ElevatedButton(
                         onPressed: () =>
                             ref.read(historyProvider.notifier).refresh(),
-                        child: const Text('Retry'),
+                        child: Text(t.retry),
                       ),
                     ],
                   ),
                 )
               : state.sessions.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'No sessions yet.\nStart a consultation!',
+                        t.noSessionsYet,
                         textAlign: TextAlign.center,
                       ),
                     )

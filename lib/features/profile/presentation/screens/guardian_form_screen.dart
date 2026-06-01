@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/models/user_models.dart';
@@ -55,8 +56,9 @@ class _GuardianFormScreenState extends ConsumerState<GuardianFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(stringsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Guardian')),
+      appBar: AppBar(title: Text(t.addGuardian)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -66,25 +68,26 @@ class _GuardianFormScreenState extends ConsumerState<GuardianFormScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (v) => Validators.validateRequired(v, 'Name'),
+                decoration: InputDecoration(labelText: t.nameLabel),
+                validator: (v) =>
+                    Validators.validateRequired(v, t.nameLabel, t),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  hintText: '+821012345678',
+                decoration: InputDecoration(
+                  labelText: t.guardianPhone,
+                  hintText: t.guardianPhoneHint,
                 ),
-                validator: Validators.validatePhone,
+                validator: (v) => Validators.validatePhone(v, t),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _relationshipController,
-                decoration: const InputDecoration(
-                  labelText: 'Relationship (optional)',
-                  hintText: 'e.g., Parent, Spouse, Friend',
+                decoration: InputDecoration(
+                  labelText: t.guardianRelationshipOptional,
+                  hintText: t.guardianRelationshipHint,
                 ),
               ),
               const SizedBox(height: 32),
@@ -92,7 +95,7 @@ class _GuardianFormScreenState extends ConsumerState<GuardianFormScreen> {
                 onPressed: _isLoading ? null : _save,
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Save Guardian'),
+                    : Text(t.saveGuardian),
               ),
             ],
           ),

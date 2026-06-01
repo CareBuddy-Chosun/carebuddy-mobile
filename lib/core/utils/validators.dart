@@ -1,35 +1,37 @@
+import '../l10n/app_strings.dart';
+
 class Validators {
   Validators._();
 
-  static String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) return 'Email is required';
+  static String? validateEmail(String? value, AppStrings t) {
+    if (value == null || value.isEmpty) return t.emailRequired;
     final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!emailRegex.hasMatch(value)) return 'Enter a valid email';
+    if (!emailRegex.hasMatch(value)) return t.emailInvalid;
     return null;
   }
 
-  static String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Password is required';
-    if (value.length < 8) return 'Password must be at least 8 characters';
+  static String? validatePassword(String? value, AppStrings t) {
+    if (value == null || value.isEmpty) return t.passwordRequired;
+    if (value.length < 8) return t.passwordTooShort;
     if (!value.contains(RegExp(r'[A-Z]'))) {
-      return 'Password must contain at least one uppercase letter';
+      return t.passwordNeedsUppercase;
     }
     if (!value.contains(RegExp(r'\d'))) {
-      return 'Password must contain at least one digit';
+      return t.passwordNeedsDigit;
     }
     return null;
   }
 
-  static String? validateRequired(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) return '$fieldName is required';
+  static String? validateRequired(String? value, String fieldName, AppStrings t) {
+    if (value == null || value.trim().isEmpty) return t.fieldRequired(fieldName);
     return null;
   }
 
-  static String? validatePhone(String? value) {
-    if (value == null || value.isEmpty) return 'Phone number is required';
+  static String? validatePhone(String? value, AppStrings t) {
+    if (value == null || value.isEmpty) return t.phoneRequired;
     final phoneRegex = RegExp(r'^\+?[1-9]\d{1,14}$');
     if (!phoneRegex.hasMatch(value)) {
-      return 'Enter a valid phone number (e.g. +821012345678)';
+      return t.phoneInvalid;
     }
     return null;
   }
