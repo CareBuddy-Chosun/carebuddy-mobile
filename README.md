@@ -1,381 +1,140 @@
 # CareBuddy — Mobile App
 
-Flutter-based mobile application for CareBuddy, providing a modern **AI-powered voice-first healthcare triage assistant** experience on both Android and iOS with real-time health support, emergency assistance, and intelligent healthcare recommendations.
+Flutter-based mobile application for CareBuddy, providing a **voice-first AI healthcare triage assistant** experience on Android and iOS — symptom triage through natural voice conversation, emergency guidance, and GPS-based hospital discovery.
+
+> **Status:** Active development. The sections below separate what is **implemented today** from what is **planned** on the roadmap, so contributors and users aren't misled about current capabilities.
 
 ---
 
-# ✨ Core Features
+# ✨ Features (Implemented)
 
-## 🧠 AI Voice Healthcare Assistant
+These features exist in the current codebase (`lib/features/`).
 
-* Real-time voice conversations with AI
-* Symptom-based smart triage
-* Natural language understanding
-* Multilingual support (English, Korean, Swahili)
-* AI-generated medical guidance
-* Text-to-speech healthcare responses
-* Voice emotion/stress detection
+## 🧠 AI Voice Triage Assistant
+* Voice-first conversation flow (speech-to-text input)
+* Symptom-based triage recommendations
+* Korean & English support
+* Text-to-speech playback of AI responses (on-device, free)
 
-## 🚑 Emergency Assistance
+## 🚑 Emergency Guidance
+* Emergency keyword detection during conversation
+* Clear "call 119 / go to the ER" guidance for critical symptoms
 
-* One-tap SOS emergency button
-* Auto-call ambulance/emergency contacts
-* Live GPS location sharing
-* Emergency nearby hospital navigation
-* Emergency medical profile access
-* Critical symptom alerts
-
-## 🏥 Smart Hospital Finder
-
-* GPS-based nearby hospitals & clinics
-* Live directions using Google Maps
-* Hospital ratings & reviews
-* Emergency room availability
-* Filter by:
-
-  * Distance
-  * Specialty
-  * Open now
-  * Insurance accepted
-
-## 📊 Health Monitoring Dashboard
-
-* Daily health summary
-* Symptom tracking charts
-* Heart rate integration (wearables)
-* Sleep monitoring
-* Medication reminders
-* Water intake tracking
-* Mood & mental wellness tracker
+## 🏥 Hospital Finder
+* GPS-based nearby hospital lookup
+* Google Maps integration for directions
 
 ## 💬 Consultation History
+* Past consultation sessions and transcripts
+* Triage results per session
 
-* AI consultation transcripts
-* Voice recording history
-* Saved medical recommendations
-* Downloadable consultation reports
-* Searchable health history
+## 🔐 Authentication
+* Email / password login & signup
+* Secure token storage (`flutter_secure_storage`)
 
-## 👨‍⚕️ Doctor Connect
+## 👤 Profile
+* User profile and basic settings
 
-* Video consultation booking
-* Chat with healthcare professionals
-* Appointment scheduling
-* Prescription upload & management
-* Telemedicine integration
+---
 
-## 🔐 Authentication & Security
+# 🗺 Roadmap (Planned / Not Yet Implemented)
 
-* Email/password login
-* Google Sign-In
-* Apple Sign-In
-* Biometric authentication
-* Encrypted health records
-* Secure cloud synchronization
+These are planned directions. They are **not** in the app yet — listed here so the vision is clear without implying they already work.
 
-## 🎨 Modern UI/UX Features
-
-* Dark & Light mode
-* Animated onboarding screens
-* Smooth voice wave animations
-* Glassmorphism modern design
-* Accessibility support
-* Elder-friendly large text mode
-* AI avatar assistant
+* **Health Monitoring** — daily summary, symptom charts, heart-rate/sleep tracking via wearables (Google Fit / Apple HealthKit), medication & water reminders, mood tracker
+* **Doctor Connect** — video consultation booking, chat with professionals, appointment scheduling, prescription management, telemedicine
+* **Expanded Auth** — Google / Apple Sign-In, biometric authentication
+* **Offline support** — cached history & offline emergency access
+* **Notifications** — medicine / appointment / hydration reminders (FCM)
+* **Accessibility** — voice-only navigation, high-contrast & large-text modes, elder-friendly UI
+* **AI enhancements** — voice emotion/stress detection, medical image analysis, smart recommendations
+* **Additional languages** — e.g. Swahili
 
 ---
 
 # 🛠 Tech Stack
 
 ## Frontend
-
 * **Framework**: Flutter (Dart)
-* **Architecture**: Clean Architecture
-* **State Management**: Riverpod / Bloc
-* **Animations**: Lottie + Flutter Animate
-* **Local Storage**: Hive / SharedPreferences
+* **State Management**: Riverpod
+* **Routing**: go_router
+* **Animations**: Lottie
+* **Local Storage**: SharedPreferences, flutter_secure_storage
 
 ## AI & Voice
-
 * **Speech Recognition**: speech_to_text
-* **Voice Playback**: flutter_tts
-* **Audio Recording**: flutter_sound
-* **AI Integration**: OpenAI / Gemini API
+* **Text-to-Speech**: flutter_tts (on-device)
+* **Audio Recording**: record / audioplayers
+* **LLM**: OpenAI-compatible backend (see [carebuddy-backend](https://github.com/CareBuddy-Chosun/carebuddy-backend))
 
 ## Maps & Location
-
-* **Maps**: Google Maps Flutter
+* **Maps**: google_maps_flutter
 * **Location**: geolocator
-* **Places API**: Google Places API
+* **Links**: url_launcher
 
-## Backend & APIs
-
+## Networking
 * **HTTP Client**: Dio
-* **Authentication**: Firebase Auth
-* **Notifications**: Firebase Cloud Messaging
-* **Database**: Firebase / Supabase
 
-## Health & Sensors
-
-* **Wearables**: Google Fit / Apple HealthKit
-* **Camera**: image_picker
-* **Permissions**: permission_handler
+> Packages above reflect the actual `pubspec.yaml`. Roadmap items (Firebase, Hive, wearables, etc.) are **not** dependencies yet and will be added when those features are built.
 
 ---
 
-# 📂 Enhanced Project Structure
+# 📂 Project Structure
 
 ```plaintext
 carebuddy-mobile/
 ├── lib/
 │   ├── main.dart
-│   │
-│   ├── app/
-│   │   ├── router/
-│   │   ├── theme/
-│   │   ├── constants/
-│   │   └── config/
-│   │
-│   ├── core/
-│   │   ├── utils/
-│   │   ├── errors/
-│   │   ├── network/
-│   │   └── services/
-│   │
+│   ├── app/                # App shell, routing, theme
+│   ├── core/               # Constants, network, services, theme
 │   ├── features/
-│   │
-│   │   ├── auth/
-│   │   │   ├── login/
-│   │   │   ├── signup/
-│   │   │   ├── forgot_password/
-│   │   │   └── biometric/
-│   │   │
-│   │   ├── onboarding/
-│   │   │
-│   │   ├── home/
-│   │   │   ├── dashboard/
-│   │   │   ├── widgets/
-│   │   │   └── notifications/
-│   │   │
-│   │   ├── consultation/
-│   │   │   ├── ai_chat/
-│   │   │   ├── voice_chat/
-│   │   │   ├── symptom_checker/
-│   │   │   └── emergency_alert/
-│   │   │
-│   │   ├── hospital/
-│   │   │   ├── map_view/
-│   │   │   ├── hospital_details/
-│   │   │   └── navigation/
-│   │   │
-│   │   ├── health_tracker/
-│   │   │   ├── medication/
-│   │   │   ├── water_tracker/
-│   │   │   ├── sleep_tracker/
-│   │   │   └── mood_tracker/
-│   │   │
-│   │   ├── appointments/
-│   │   │
-│   │   ├── profile/
-│   │   │
-│   │   ├── settings/
-│   │   │
-│   │   └── history/
-│   │
-│   ├── shared/
-│   │   ├── widgets/
-│   │   ├── models/
-│   │   ├── components/
-│   │   └── animations/
-│   │
-│   └── generated/
-│
+│   │   ├── auth/           # Login / signup
+│   │   ├── home/           # Home / dashboard
+│   │   ├── consultation/   # Voice-first triage chat
+│   │   ├── hospital/       # GPS-based hospital finder
+│   │   ├── history/        # Session history
+│   │   └── profile/        # User profile & settings
+│   └── shared/             # Reusable widgets, models
 ├── assets/
-│   ├── images/
-│   ├── icons/
-│   ├── animations/
-│   ├── audio/
-│   └── fonts/
-│
 ├── test/
-├── integration_test/
-├── docs/
-├── .env
-├── pubspec.yaml
-└── README.md
+└── pubspec.yaml
 ```
-
----
-
-# 🎯 Key Screens
-
-## 🏠 Home Dashboard
-
-* AI greeting assistant
-* Quick symptom check
-* Nearby hospitals preview
-* Daily health insights
-* Medication reminders
-* Emergency shortcut
-
-## 🎙 Voice Consultation Screen
-
-* Floating AI assistant avatar
-* Animated voice waveform
-* Live speech transcription
-* AI response cards
-* Voice replay option
-
-## 🗺 Hospital Finder Screen
-
-* Interactive Google Maps
-* Live hospital markers
-* Emergency route navigation
-* Hospital detail bottom sheet
-
-## 📈 Health Analytics Screen
-
-* Weekly symptom trends
-* Health score indicators
-* Mood analytics
-* Wellness insights
-
----
-
-# 🔥 Advanced Features
-
-## 🤖 AI Smart Recommendations
-
-* Suggest hospitals based on symptoms
-* Predict possible health risks
-* Personalized wellness suggestions
-* Smart medication reminders
-
-## 🌐 Offline Support
-
-* Cached consultation history
-* Offline emergency access
-* Local voice recording storage
-
-## 📱 Smart Notifications
-
-* Medicine reminders
-* Appointment alerts
-* Hydration reminders
-* Emergency health warnings
-
-## 🧩 Accessibility
-
-* Voice-only navigation
-* Screen reader support
-* High contrast mode
-* Large accessibility fonts
 
 ---
 
 # 🚀 Getting Started
 
 ## Prerequisites
-
-* Flutter SDK 3.19+
-* Dart 3.3+
+* Flutter SDK (see `environment.sdk` in `pubspec.yaml`)
 * Android Studio / VS Code
-* Xcode (iOS development)
+* Xcode (for iOS development)
 
----
-
-# ⚙️ Setup
+## Setup
 
 ```bash
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/CareBuddy-Chosun/carebuddy-mobile.git
-
-# 2. Open project
 cd carebuddy-mobile
 
-# 3. Install dependencies
+# 2. Install dependencies
 flutter pub get
 
-# 4. Configure environment variables
+# 3. Configure environment variables
 cp .env.example .env
+# Edit .env with your backend URL and API keys
 
-# 5. Run the app
+# 4. Run the app
 flutter run
 ```
 
----
-
-# 📦 Recommended Flutter Packages
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-
-  flutter_riverpod:
-  dio:
-  google_maps_flutter:
-  geolocator:
-  speech_to_text:
-  flutter_tts:
-  flutter_sound:
-  firebase_core:
-  firebase_auth:
-  cloud_firestore:
-  firebase_messaging:
-  hive:
-  lottie:
-  flutter_animate:
-  permission_handler:
-  image_picker:
-  cached_network_image:
-  intl:
-```
-
----
-
-# 🧪 Testing
+## Testing
 
 ```bash
-# Unit tests
 flutter test
-
-# Integration tests
-flutter test integration_test
 ```
 
 ---
 
-# 🔒 Security Features
+# 🔗 Related
 
-* JWT authentication
-* API request encryption
-* HIPAA-inspired data handling
-* Secure token storage
-* Biometric login protection
-
----
-
-# 🌍 Future Improvements
-
-* AI medical image analysis
-* Smartwatch integration
-* Mental health chatbot
-* AR medical guidance
-* Blockchain medical records
-* AI doctor recommendation engine
-
----
-
-# 👥 Team
-
-| Name       | Responsibility                                               |
-| ---------- | ------------------------------------------------------------ |
-| Patience   | Flutter UI/UX, Voice Interaction UX, Health Dashboard Design |
-| Jihyuk Lee | App Architecture, API Integration, Backend Connectivity      |
-
----
-
-# 📌 Vision
-
-CareBuddy aims to make healthcare support more accessible, intelligent, and user-friendly through AI-powered voice interaction, emergency assistance, and smart healthcare recommendations.
+* **Backend**: [carebuddy-backend](https://github.com/CareBuddy-Chosun/carebuddy-backend) — FastAPI triage API, TTS/STT, LLM integration
