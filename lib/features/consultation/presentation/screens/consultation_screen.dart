@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/services/tts_service.dart';
 import '../providers/consultation_provider.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/voice_input_button.dart';
@@ -22,6 +23,8 @@ class ConsultationScreen extends ConsumerStatefulWidget {
 class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _ttsEnabled = true;
+  bool _isSpeaking = false;
 
   @override
   void initState() {
@@ -35,6 +38,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    ref.read(ttsServiceProvider).stop();
     super.dispose();
   }
 
@@ -59,6 +63,15 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
     _scrollToBottom();
   }
 
+  Future<void> _speakResponse(String text) async {
+    setState(() => _isSpeaking = true);
+    try {
+      await ref.read(ttsServiceProvider).speak(text);
+    } finally {
+      if (mounted) setState(() => _isSpeaking = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(consultationProvider);
@@ -70,11 +83,38 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
         );
       }
+
+      // Auto-play TTS when AI responds
+      if (_ttsEnabled &&
+          next.ttsText != null &&
+          next.ttsText != prev?.ttsText &&
+          !_isSpeaking) {
+        _speakResponse(next.ttsText!);
+      }
     });
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consultation'),
+        actions: [
+          IconButton(
+            icon: Icon(_ttsEnabled ? Icons.volume_up : Icons.volume_off),
+            tooltip: _ttsEnabled ? 'TTS On' : 'TTS Off',
+            onPressed: () {
+              setState(() => _ttsEnabled = !_ttsEnabled);
+              if (!_ttsEnabled) ref.read(ttsServiceProvider).stop();
+            },
+          ),
+          if (_isSpeaking)
+            IconButton(
+              icon: const Icon(Icons.stop_circle),
+              tooltip: 'Stop speaking',
+              onPressed: () {
+                ref.read(ttsServiceProvider).stop();
+                setState(() => _isSpeaking = false);
+              },
+            ),
+        ],
         bottom: state.triageResult != null && !state.sessionComplete
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(40),

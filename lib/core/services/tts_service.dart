@@ -1,61 +1,62 @@
-import 'dart:io' show File;
+import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-
-import '../network/voice_repository.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 final ttsServiceProvider = Provider<TtsService>((ref) {
-  return TtsService(ref.read(voiceRepositoryProvider));
+  final service = TtsService();
+  ref.onDispose(() => service.dispose());
+  return service;
 });
 
 class TtsService {
-  TtsService(this._voiceRepo);
+  final FlutterTts _tts = FlutterTts();
+  bool _initialized = false;
 
-  final VoiceRepository _voiceRepo;
-  final AudioPlayer _player = AudioPlayer();
+  Future<void> _ensureInitialized() async {
+    if (_initialized) return;
 
-  /// Synthesize text and play audio. Calls [onComplete] when done.
-  Future<void> speak(String text, {VoidCallback? onComplete}) async {
-    try {
-      final bytes = await _voiceRepo.synthesizeSpeech(text: text);
-      if (bytes.isEmpty) {
-        // Mock backend or empty payload — skip playback but keep the flow.
-        onComplete?.call();
-        return;
-      }
-      await _playBytes(bytes);
-      onComplete?.call();
-    } catch (_) {
-      // If TTS fails, still call onComplete to allow flow to continue
-      onComplete?.call();
-    }
+    await _tts.setLanguage('ko-KR');
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+
+    _initialized = true;
   }
 
-  Future<void> _playBytes(Uint8List bytes) async {
-    if (kIsWeb) {
-      // path_provider/dart:io File aren't supported on web; play bytes directly.
-      await _player.play(BytesSource(bytes));
-    } else {
-      final tempDir = await getTemporaryDirectory();
-      final file = File(
-          '${tempDir.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
-      await file.writeAsBytes(bytes);
-      await _player.play(DeviceFileSource(file.path));
-    }
-    // Wait for playback to complete
-    await _player.onPlayerComplete.first;
+  /// Speak text and call [onComplete] when done.
+  Future<void> speak(String text, {void Function()? onComplete}) async {
+    await _ensureInitialized();
+
+    final completer = Completer<void>();
+
+    _tts.setCompletionHandler(() {
+      if (!completer.isCompleted) completer.complete();
+    });
+
+    _tts.setErrorHandler((msg) {
+      if (!completer.isCompleted) completer.complete();
+    });
+
+    _tts.setCancelHandler(() {
+      if (!completer.isCompleted) completer.complete();
+    });
+
+    await _tts.speak(text);
+    await completer.future;
+    onComplete?.call();
   }
 
   Future<void> stop() async {
-    await _player.stop();
+    await _tts.stop();
+  }
+
+  Future<void> setLanguage(String lang) async {
+    await _ensureInitialized();
+    await _tts.setLanguage(lang);
   }
 
   void dispose() {
-    _player.dispose();
+    _tts.stop();
   }
 }
-
-typedef VoidCallback = void Function();
