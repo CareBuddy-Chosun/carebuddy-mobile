@@ -25,8 +25,14 @@ class TtsService {
   }
 
   /// Speak text and call [onComplete] when done.
-  Future<void> speak(String text, {void Function()? onComplete}) async {
+  ///
+  /// If [lang] is provided (e.g. "ko-KR" or "en-US") the TTS language is set
+  /// before speaking so playback follows the active app language.
+  Future<void> speak(String text, {void Function()? onComplete, String? lang}) async {
     await _ensureInitialized();
+    if (lang != null) {
+      await _tts.setLanguage(lang);
+    }
 
     final completer = Completer<void>();
 

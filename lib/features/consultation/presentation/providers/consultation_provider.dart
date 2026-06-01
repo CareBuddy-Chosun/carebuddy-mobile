@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/language_provider.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/session_repository.dart';
 import '../../../../core/services/emergency_detector.dart';
@@ -109,17 +110,25 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
           .toList();
 
       // Add client-side greeting if no messages exist
+      String? greeting;
       if (messages.isEmpty) {
-        messages.add(ChatMessage(
-          role: 'assistant',
-          content:
-              "Hello! I'm CareBuddy. I'm here to help assess your symptoms. "
-              "Please note: I am not a medical professional and this is not a diagnosis. "
-              "How are you feeling today?",
-        ));
+        greeting = _greetingText(_ref.read(languageProvider));
+        messages.add(ChatMessage(role: 'assistant', content: greeting));
       }
 
-      state = state.copyWith(sessionId: session.id, messages: messages);
+      // Surface the greeting via ttsText so the screen's auto-play path can
+      // speak it on open (FR-006). When the session was created server-side
+      // with messages, we still speak the first assistant message.
+      final spokenGreeting = greeting ??
+          (messages.isNotEmpty && messages.first.role == 'assistant'
+              ? messages.first.content
+              : null);
+
+      state = state.copyWith(
+        sessionId: session.id,
+        messages: messages,
+        ttsText: spokenGreeting,
+      );
     } catch (e) {
       final msg = e is ApiException ? e.userMessage : e.toString();
       state = state.copyWith(error: msg);
@@ -151,6 +160,7 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
         state.sessionId!,
         content: text,
         inputType: inputType,
+        language: _ref.read(languageProvider),
       );
 
       final newMessages = List<ChatMessage>.from(state.messages)
@@ -173,6 +183,20 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
       final msg = e is ApiException ? e.userMessage : e.toString();
       state = state.copyWith(isLoading: false, error: msg);
     }
+  }
+
+  /// Bilingual greeting spoken/shown when a new consultation opens.
+  /// Includes the mandatory non-diagnostic disclaimer.
+  String _greetingText(String language) {
+    if (language == 'en') {
+      return "Hello! I'm CareBuddy. I'm here to help assess your symptoms. "
+          "Please note: I am not a medical professional and this is not a diagnosis. "
+          "How are you feeling today?";
+    }
+    // Default Korean ("ko").
+    return "안녕하세요! 저는 케어버디예요. 증상 확인을 도와드릴게요. "
+        "참고로 저는 의료 전문가가 아니며, 이 안내는 진단이 아닙니다. "
+        "오늘 어디가 불편하신가요?";
   }
 
   Future<void> notifyGuardians() async {

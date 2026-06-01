@@ -326,6 +326,7 @@ class MockSessionRepository extends SessionRepository {
     required String content,
     String inputType = 'text',
     double? audioDurationSeconds,
+    String? language,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
