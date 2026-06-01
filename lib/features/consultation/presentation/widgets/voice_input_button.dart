@@ -1,67 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/constants/app_theme.dart';
 
-class VoiceInputButton extends StatefulWidget {
-  const VoiceInputButton({super.key, required this.onResult});
+/// Presentation-only tap-to-talk button used for manual voice input when
+/// hands-free voice mode is OFF.
+///
+/// The actual [SpeechToText] session is owned by the consultation screen so
+/// there is only ever one recognizer running (no duplicate listen sessions).
+/// This widget just renders the mic state and forwards taps.
+class VoiceInputButton extends StatelessWidget {
+  const VoiceInputButton({
+    super.key,
+    required this.isListening,
+    required this.onTap,
+    this.enabled = true,
+  });
 
-  final Future<void> Function(String) onResult;
+  /// Whether the screen's recognizer is currently listening.
+  final bool isListening;
 
-  @override
-  State<VoiceInputButton> createState() => _VoiceInputButtonState();
-}
+  /// Toggle listening on/off.
+  final VoidCallback onTap;
 
-class _VoiceInputButtonState extends State<VoiceInputButton> {
-  final SpeechToText _stt = SpeechToText();
-  bool _isListening = false;
-  bool _isAvailable = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initStt();
-  }
-
-  Future<void> _initStt() async {
-    _isAvailable = await _stt.initialize();
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await _stt.stop();
-      setState(() => _isListening = false);
-      return;
-    }
-
-    setState(() => _isListening = true);
-    await _stt.listen(
-      onResult: (result) {
-        if (result.finalResult && result.recognizedWords.isNotEmpty) {
-          setState(() => _isListening = false);
-          widget.onResult(result.recognizedWords);
-        }
-      },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 3),
-      localeId: 'ko-KR',
-    );
-  }
+  /// Disabled when STT is unavailable / permission denied.
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _isAvailable ? _toggleListening : null,
+      onTap: enabled ? onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 48,
         height: 48,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _isListening ? AppTheme.emergency : AppTheme.primary,
+          color: !enabled
+              ? Colors.grey
+              : (isListening ? AppTheme.emergency : AppTheme.primary),
         ),
         child: Icon(
-          _isListening ? Icons.stop : Icons.mic,
+          isListening ? Icons.stop : Icons.mic,
           color: Colors.white,
         ),
       ),
