@@ -660,18 +660,14 @@ class _ShellScreenState extends State<ShellScreen>
             destinations: [
               NavigationDestination(
                 icon: _healthNavIcon(
-                  image:
-                      "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
-
+                  icon: Icons.home_rounded,
                   selected:
                       _currentIndex == 0,
                 ),
 
                 selectedIcon:
                     _healthNavIcon(
-                  image:
-                      "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
-
+                  icon: Icons.home_rounded,
                   selected: true,
                 ),
 
@@ -680,18 +676,14 @@ class _ShellScreenState extends State<ShellScreen>
 
               NavigationDestination(
                 icon: _healthNavIcon(
-                  image:
-                      "https://cdn-icons-png.flaticon.com/512/2966/2966480.png",
-
+                  icon: Icons.history_rounded,
                   selected:
                       _currentIndex == 1,
                 ),
 
                 selectedIcon:
                     _healthNavIcon(
-                  image:
-                      "https://cdn-icons-png.flaticon.com/512/2966/2966480.png",
-
+                  icon: Icons.history_rounded,
                   selected: true,
                 ),
 
@@ -700,18 +692,14 @@ class _ShellScreenState extends State<ShellScreen>
 
               NavigationDestination(
                 icon: _healthNavIcon(
-                  image:
-                      "https://cdn-icons-png.flaticon.com/512/387/387561.png",
-
+                  icon: Icons.person_rounded,
                   selected:
                       _currentIndex == 2,
                 ),
 
                 selectedIcon:
                     _healthNavIcon(
-                  image:
-                      "https://cdn-icons-png.flaticon.com/512/387/387561.png",
-
+                  icon: Icons.person_rounded,
                   selected: true,
                 ),
 
@@ -726,7 +714,7 @@ class _ShellScreenState extends State<ShellScreen>
 
   // ================= NAV ICON =================
   Widget _healthNavIcon({
-    required String image,
+    required IconData icon,
     required bool selected,
   }) {
     return AnimatedContainer(
@@ -763,12 +751,12 @@ class _ShellScreenState extends State<ShellScreen>
 
         scale: selected ? 1.15 : 1,
 
-        child: Image.network(
-          image,
-
-          width: selected ? 32 : 25,
-
-          height: selected ? 32 : 25,
+        child: Icon(
+          icon,
+          color: selected
+              ? const Color(0xFF1E88E5)
+              : Colors.grey,
+          size: selected ? 32 : 25,
         ),
       ),
     );
