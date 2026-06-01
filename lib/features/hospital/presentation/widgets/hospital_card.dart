@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../shared/models/hospital_models.dart';
 
-class HospitalCard extends StatelessWidget {
+class HospitalCard extends ConsumerWidget {
   const HospitalCard({super.key, required this.hospital});
 
   final Hospital hospital;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(stringsProvider);
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -33,7 +36,7 @@ class HospitalCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${hospital.distanceKm.toStringAsFixed(1)} km',
+                  t.distanceKm(hospital.distanceKm.toStringAsFixed(1)),
                   style: const TextStyle(
                       color: AppTheme.textSecondary, fontSize: 13),
                 ),
@@ -45,7 +48,7 @@ class HospitalCard extends StatelessWidget {
                     color: AppTheme.textSecondary, fontSize: 13)),
             if (hospital.operatingHours != null) ...[
               const SizedBox(height: 4),
-              Text('Hours: ${hospital.operatingHours}',
+              Text(t.hospitalHours(hospital.operatingHours!),
                   style: const TextStyle(
                       color: AppTheme.textSecondary, fontSize: 12)),
             ],
@@ -57,7 +60,7 @@ class HospitalCard extends StatelessWidget {
                 children: [
                   if (hospital.hasEmergencyRoom)
                     Chip(
-                      label: const Text('ER'),
+                      label: Text(t.hospitalEr),
                       backgroundColor: AppTheme.emergency.withValues(alpha: 0.1),
                       labelStyle: const TextStyle(
                           color: AppTheme.emergency, fontSize: 11),
@@ -83,7 +86,7 @@ class HospitalCard extends StatelessWidget {
                     onPressed: () =>
                         launchUrl(Uri.parse('tel:${hospital.phone}')),
                     icon: const Icon(Icons.phone, size: 16),
-                    label: const Text('Call'),
+                    label: Text(t.hospitalCall),
                   ),
                 if (hospital.phone != null) const SizedBox(width: 8),
                 OutlinedButton.icon(
@@ -94,7 +97,7 @@ class HospitalCard extends StatelessWidget {
                     }
                   },
                   icon: const Icon(Icons.directions, size: 16),
-                  label: const Text('Directions'),
+                  label: Text(t.hospitalDirections),
                 ),
               ],
             ),

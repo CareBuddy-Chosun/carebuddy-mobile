@@ -41,8 +41,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/hospitals',
         builder: (_, state) {
-          final triageLevel = state.extra as String?;
-          return HospitalScreen(triageLevel: triageLevel);
+          final extra = state.extra;
+          String? level;
+          String? dept;
+          if (extra is Map) {
+            level = extra['level'] as String?;
+            dept = extra['department'] as String?;
+          } else if (extra is String) {
+            level = extra;
+          }
+          return HospitalScreen(triageLevel: level, department: dept);
         },
       ),
       GoRoute(

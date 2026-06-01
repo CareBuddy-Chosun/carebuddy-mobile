@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../providers/profile_provider.dart';
 
 class GuardianListScreen extends ConsumerWidget {
@@ -11,9 +12,10 @@ class GuardianListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(profileProvider);
     final guardians = state.profile?.guardians ?? [];
+    final t = ref.watch(stringsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Emergency Guardians')),
+      appBar: AppBar(title: Text(t.emergencyGuardians)),
       floatingActionButton: guardians.length < 2
           ? FloatingActionButton(
               onPressed: () => context.push('/profile/guardians/add'),
@@ -21,9 +23,9 @@ class GuardianListScreen extends ConsumerWidget {
             )
           : null,
       body: guardians.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'No guardians configured.\nTap + to add one (max 2).',
+                t.noGuardiansConfigured,
                 textAlign: TextAlign.center,
               ),
             )
@@ -47,17 +49,17 @@ class GuardianListScreen extends ConsumerWidget {
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: const Text('Remove Guardian'),
-                            content: Text('Remove ${g.name}?'),
+                            title: Text(t.removeGuardian),
+                            content: Text(t.removeGuardianConfirm(g.name)),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
-                                child: const Text('Cancel'),
+                                child: Text(t.cancel),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('Remove',
-                                    style: TextStyle(color: Colors.red)),
+                                child: Text(t.remove,
+                                    style: const TextStyle(color: Colors.red)),
                               ),
                             ],
                           ),

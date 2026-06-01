@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/session_repository.dart';
@@ -73,6 +74,11 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
   Future<void> init(String? existingSessionId) async {
     final repo = _ref.read(sessionRepositoryProvider);
 
+    // Always start from a clean slate so a previous (completed) session's
+    // triage result / sessionComplete flag never leaks into a new chat and
+    // blocks the input bar.
+    state = const ConsultationState();
+
     try {
       if (existingSessionId != null) {
         // Load existing session with full message history
@@ -85,7 +91,7 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
                 ))
             .toList();
 
-        state = state.copyWith(
+        state = ConsultationState(
           sessionId: session.id,
           messages: messages,
           sessionComplete: session.status != 'active',
@@ -112,7 +118,7 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
       // Add client-side greeting if no messages exist
       String? greeting;
       if (messages.isEmpty) {
-        greeting = _greetingText(_ref.read(languageProvider));
+        greeting = _ref.read(stringsProvider).consultationGreeting;
         messages.add(ChatMessage(role: 'assistant', content: greeting));
       }
 
@@ -124,7 +130,7 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
               ? messages.first.content
               : null);
 
-      state = state.copyWith(
+      state = ConsultationState(
         sessionId: session.id,
         messages: messages,
         ttsText: spokenGreeting,
@@ -183,20 +189,6 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
       final msg = e is ApiException ? e.userMessage : e.toString();
       state = state.copyWith(isLoading: false, error: msg);
     }
-  }
-
-  /// Bilingual greeting spoken/shown when a new consultation opens.
-  /// Includes the mandatory non-diagnostic disclaimer.
-  String _greetingText(String language) {
-    if (language == 'en') {
-      return "Hello! I'm CareBuddy. I'm here to help assess your symptoms. "
-          "Please note: I am not a medical professional and this is not a diagnosis. "
-          "How are you feeling today?";
-    }
-    // Default Korean ("ko").
-    return "안녕하세요! 저는 케어버디예요. 증상 확인을 도와드릴게요. "
-        "참고로 저는 의료 전문가가 아니며, 이 안내는 진단이 아닙니다. "
-        "오늘 어디가 불편하신가요?";
   }
 
   Future<void> notifyGuardians() async {

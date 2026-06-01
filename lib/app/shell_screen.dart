@@ -1,18 +1,19 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/l10n/app_strings.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/history/presentation/screens/history_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 
-class ShellScreen extends StatefulWidget {
+class ShellScreen extends ConsumerStatefulWidget {
   const ShellScreen({super.key});
 
   @override
-  State<ShellScreen> createState() => _ShellScreenState();
+  ConsumerState<ShellScreen> createState() => _ShellScreenState();
 }
 
-class _ShellScreenState extends State<ShellScreen>
+class _ShellScreenState extends ConsumerState<ShellScreen>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
 
@@ -22,21 +23,11 @@ class _ShellScreenState extends State<ShellScreen>
     ProfileScreen(),
   ];
 
-  final List<String> _titles = [
-    "Health Dashboard",
-    "Medical History",
-    "Patient Profile",
-  ];
-
-  final List<String> _headerImages = [
-    // Virus image
-    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?q=80&w=1200&auto=format&fit=crop",
-
-    // Headache image
-    "https://images.unsplash.com/photo-1604881991720-f91add269bed?q=80&w=1200&auto=format&fit=crop",
-
-    // Doctor image
-    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?q=80&w=1200&auto=format&fit=crop",
+  // 외부 이미지는 웹(CanvasKit)에서 CORS로 막혀서 단색 헤더로 대체
+  final List<Color> _headerColors = const [
+    Color(0xFF4A90D9),
+    Color(0xFF5C6BC0),
+    Color(0xFF26A69A),
   ];
 
   // ================= ANIMATIONS =================
@@ -57,7 +48,7 @@ class _ShellScreenState extends State<ShellScreen>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
 
     _pulseAnimation = Tween<double>(
       begin: 1,
@@ -89,7 +80,7 @@ class _ShellScreenState extends State<ShellScreen>
     _rotateController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),
-    )..repeat();
+    );
 
     _rotateAnimation = Tween<double>(
       begin: 0,
@@ -108,6 +99,12 @@ class _ShellScreenState extends State<ShellScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = ref.watch(stringsProvider);
+    final titles = [
+      t.shellTitleDashboard,
+      t.shellTitleHistory,
+      t.shellTitleProfile,
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F8FB),
@@ -130,12 +127,7 @@ class _ShellScreenState extends State<ShellScreen>
                     bottomRight: Radius.circular(40),
                   ),
 
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      _headerImages[_currentIndex],
-                    ),
-                    fit: BoxFit.cover,
-                  ),
+                  color: _headerColors[_currentIndex],
                 ),
 
                 child: Stack(
@@ -164,25 +156,8 @@ class _ShellScreenState extends State<ShellScreen>
                       ),
                     ),
 
-                    // ================= BLUR =================
-                    ClipRRect(
-                      borderRadius:
-                          const BorderRadius.only(
-                        bottomLeft:
-                            Radius.circular(40),
-                        bottomRight:
-                            Radius.circular(40),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(
-                          sigmaX: 1.5,
-                          sigmaY: 1.5,
-                        ),
-                        child: Container(
-                          color: Colors.transparent,
-                        ),
-                      ),
-                    ),
+                    // ================= BLUR 제거 (웹 CanvasKit paint 이슈) =================
+                    const SizedBox.shrink(),
 
                     // ================= CONTENT =================
                     SafeArea(
@@ -342,10 +317,11 @@ class _ShellScreenState extends State<ShellScreen>
                                       child:
                                           const CircleAvatar(
                                         radius: 27,
-
-                                        backgroundImage:
-                                            NetworkImage(
-                                          "https://i.pravatar.cc/300",
+                                        backgroundColor: Colors.white,
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 30,
+                                          color: Color(0xFF4A90D9),
                                         ),
                                       ),
                                     ),
@@ -389,7 +365,7 @@ class _ShellScreenState extends State<ShellScreen>
                                 },
 
                                 child: Text(
-                                  _titles[
+                                  titles[
                                       _currentIndex],
 
                                   style: theme
@@ -421,7 +397,7 @@ class _ShellScreenState extends State<ShellScreen>
                                 ),
 
                                 child: Text(
-                                  "AI-powered healthcare experience",
+                                  t.shellSubtitle,
 
                                   style: theme
                                       .textTheme
@@ -535,12 +511,12 @@ class _ShellScreenState extends State<ShellScreen>
                                               CrossAxisAlignment
                                                   .start,
 
-                                          children: const [
+                                          children: [
                                             Text(
-                                              "Live Health Monitoring",
+                                              t.shellLiveMonitoring,
 
                                               style:
-                                                  TextStyle(
+                                                  const TextStyle(
                                                 color:
                                                     Colors.white,
 
@@ -552,15 +528,15 @@ class _ShellScreenState extends State<ShellScreen>
                                               ),
                                             ),
 
-                                            SizedBox(
+                                            const SizedBox(
                                                 height:
                                                     4),
 
                                             Text(
-                                              "Tracking symptoms in real-time",
+                                              t.shellTrackingRealtime,
 
                                               style:
-                                                  TextStyle(
+                                                  const TextStyle(
                                                 color:
                                                     Colors.white70,
                                               ),
@@ -671,7 +647,7 @@ class _ShellScreenState extends State<ShellScreen>
                   selected: true,
                 ),
 
-                label: "Home",
+                label: t.navHome,
               ),
 
               NavigationDestination(
@@ -687,7 +663,7 @@ class _ShellScreenState extends State<ShellScreen>
                   selected: true,
                 ),
 
-                label: "History",
+                label: t.navHistory,
               ),
 
               NavigationDestination(
@@ -703,7 +679,7 @@ class _ShellScreenState extends State<ShellScreen>
                   selected: true,
                 ),
 
-                label: "Profile",
+                label: t.navProfile,
               ),
             ],
           ),

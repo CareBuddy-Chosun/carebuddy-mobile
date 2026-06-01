@@ -29,6 +29,7 @@ _$TriageResultImpl _$$TriageResultImplFromJson(
 ) => _$TriageResultImpl(
   level: json['level'] as String,
   explanation: json['explanation'] as String?,
+  recommendedDepartment: json['recommended_department'] as String?,
   nextSteps:
       (json['next_steps'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -49,6 +50,7 @@ Map<String, dynamic> _$$TriageResultImplToJson(_$TriageResultImpl instance) =>
     <String, dynamic>{
       'level': instance.level,
       'explanation': instance.explanation,
+      'recommended_department': instance.recommendedDepartment,
       'next_steps': instance.nextSteps,
       'disclaimer': instance.disclaimer,
       'emergency_keywords_detected': instance.emergencyKeywordsDetected,

@@ -3,8 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persisted app language code ("ko" or "en"). Defaults to "ko".
 ///
-/// This is used purely to tell the backend which language to reply in via the
-/// chat request. It does NOT drive UI internationalization.
+/// Drives both the chat reply language (sent to the backend) and the app-wide
+/// UI internationalization via `stringsProvider` in `core/l10n/app_strings.dart`.
 const String _kLanguagePrefsKey = 'app_language';
 const String _kDefaultLanguage = 'ko';
 

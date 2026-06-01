@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/utils/validators.dart';
 import '../providers/auth_provider.dart';
@@ -78,8 +79,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(stringsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(title: Text(t.createAccount)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -90,33 +92,35 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                  validator: (v) => Validators.validateRequired(v, 'Name'),
+                  decoration: InputDecoration(labelText: t.fullName),
+                  validator: (v) =>
+                      Validators.validateRequired(v, t.nameLabel, t),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: Validators.validateEmail,
+                  decoration: InputDecoration(labelText: t.loginEmail),
+                  validator: (v) => Validators.validateEmail(v, t),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    helperText: 'Min 8 characters, 1 uppercase, 1 digit',
+                  decoration: InputDecoration(
+                    labelText: t.loginPassword,
+                    helperText: t.passwordHelper,
                   ),
-                  validator: Validators.validatePassword,
+                  validator: (v) => Validators.validatePassword(v, t),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     _dateOfBirth != null
-                        ? 'Date of Birth: ${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}'
-                        : 'Date of Birth (optional)',
+                        ? t.dateOfBirthSelected(
+                            '${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}')
+                        : t.dateOfBirthOptional,
                     style: TextStyle(
                       color: _dateOfBirth != null
                           ? Colors.black
@@ -132,13 +136,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   value: _consentDataStorage,
                   onChanged: (v) =>
                       setState(() => _consentDataStorage = v ?? false),
-                  title: const Text(
-                    'I consent to data storage for personalized care',
-                    style: TextStyle(fontSize: 14),
+                  title: Text(
+                    t.consentTitle,
+                    style: const TextStyle(fontSize: 14),
                   ),
-                  subtitle: const Text(
-                    'Your session data will be stored to improve future consultations.',
-                    style: TextStyle(fontSize: 12),
+                  subtitle: Text(
+                    t.consentSubtitle,
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -146,12 +150,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onPressed: _isLoading ? null : _register,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Create Account'),
+                      : Text(t.createAccount),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.pop(),
-                  child: const Text('Already have an account? Sign In'),
+                  child: Text(t.alreadyHaveAccountSignIn),
                 ),
               ],
             ),

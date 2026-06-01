@@ -42,7 +42,7 @@ class HospitalNotifier extends StateNotifier<HospitalState> {
 
   final Ref _ref;
 
-  Future<void> loadNearby({String? triageLevel}) async {
+  Future<void> loadNearby({String? triageLevel, String? department}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       double latitude;
@@ -76,6 +76,7 @@ class HospitalNotifier extends StateNotifier<HospitalState> {
         latitude: latitude,
         longitude: longitude,
         triageLevel: triageLevel,
+        department: department,
       );
 
       state = state.copyWith(

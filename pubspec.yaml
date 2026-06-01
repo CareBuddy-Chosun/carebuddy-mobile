@@ -31,6 +31,9 @@ dependencies:
   audioplayers: ^6.1.0
   speech_to_text: ^7.0.0
   flutter_tts: ^4.2.0
+  # 웹 TTS는 flutter_tts_web의 onBoundary JS-interop 캐스팅 버그를 피하려
+  # Web Speech API를 직접 호출한다(lib/core/services/tts_web.dart).
+  web: ^1.1.0
 
   # Maps & Location
   geolocator: ^13.0.2

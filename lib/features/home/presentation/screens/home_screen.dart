@@ -2,20 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(stringsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CareBuddy'),
+        title: Text(t.appName),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () => context.push('/profile'),
-            tooltip: 'Profile',
+            tooltip: t.profileTooltip,
           ),
         ],
       ),
@@ -24,36 +26,37 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'How can I help you today?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Text(
+              t.homeGreeting,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'I am not a medical professional. This is not a diagnosis.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            Text(
+              t.homeDisclaimer,
+              style:
+                  const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 32),
             _ActionCard(
               icon: Icons.mic,
-              title: 'Start Consultation',
-              subtitle: 'Describe your symptoms by voice or text',
+              title: t.startConsultation,
+              subtitle: t.startConsultationSub,
               color: AppTheme.primary,
               onTap: () => context.push('/consultation'),
             ),
             const SizedBox(height: 16),
             _ActionCard(
               icon: Icons.history,
-              title: 'Past Sessions',
-              subtitle: 'Review your consultation history',
+              title: t.pastSessions,
+              subtitle: t.pastSessionsSub,
               color: AppTheme.textSecondary,
               onTap: () => context.push('/history'),
             ),
             const SizedBox(height: 16),
             _ActionCard(
               icon: Icons.local_hospital,
-              title: 'Nearby Hospitals',
-              subtitle: 'Find hospitals and clinics near you',
+              title: t.nearbyHospitals,
+              subtitle: t.nearbyHospitalsSub,
               color: AppTheme.success,
               onTap: () => context.push('/hospitals'),
             ),

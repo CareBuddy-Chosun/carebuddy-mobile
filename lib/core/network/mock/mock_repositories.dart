@@ -467,6 +467,7 @@ class MockHospitalRepository extends HospitalRepository {
     required double latitude,
     required double longitude,
     String? triageLevel,
+    String? department,
     double radiusKm = 10.0,
     int limit = 5,
   }) async {

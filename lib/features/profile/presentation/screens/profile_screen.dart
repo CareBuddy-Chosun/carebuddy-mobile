@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../shared/models/user_models.dart';
@@ -28,10 +29,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(profileProvider);
+    final t = ref.watch(stringsProvider);
 
     if (state.isLoading && state.profile == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
+        appBar: AppBar(title: Text(t.profileTitle)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -39,13 +41,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profile = state.profile;
     if (profile == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
-        body: Center(child: Text(state.error ?? 'Failed to load profile')),
+        appBar: AppBar(title: Text(t.profileTitle)),
+        body: Center(child: Text(state.error ?? t.failedToLoadProfile)),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(t.profileTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -64,12 +66,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       style: const TextStyle(color: AppTheme.textSecondary)),
                   if (profile.dateOfBirth != null) ...[
                     const SizedBox(height: 4),
-                    Text('Born: ${profile.dateOfBirth}',
+                    Text(t.bornOn(profile.dateOfBirth!),
                         style:
                             const TextStyle(color: AppTheme.textSecondary)),
                   ],
                   const SizedBox(height: 8),
-                  Text('${profile.sessionCount} consultations',
+                  Text(t.consultationsCount(profile.sessionCount),
                       style: const TextStyle(color: AppTheme.textSecondary)),
                 ],
               ),
@@ -80,10 +82,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // Data consent toggle
           Card(
             child: SwitchListTile(
-              title: const Text('Data Storage Consent'),
-              subtitle: const Text(
-                'Store session data for personalized future consultations',
-                style: TextStyle(fontSize: 12),
+              title: Text(t.dataConsentTitle),
+              subtitle: Text(
+                t.dataConsentSubtitle,
+                style: const TextStyle(fontSize: 12),
               ),
               value: profile.consentDataStorage,
               onChanged: (value) {
@@ -102,14 +104,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Language / 언어',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    t.languageSectionTitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Language CareBuddy responds in',
-                    style: TextStyle(
+                  Text(
+                    t.languageSectionSubtitle,
+                    style: const TextStyle(
                         fontSize: 12, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 12),
@@ -135,8 +137,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.people),
-              title: const Text('Emergency Guardians'),
-              subtitle: Text('${profile.guardians.length}/2 configured'),
+              title: Text(t.emergencyGuardians),
+              subtitle: Text(t.guardiansConfigured(profile.guardians.length)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/profile/guardians'),
             ),
@@ -150,7 +152,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (context.mounted) context.go('/login');
             },
             icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
+            label: Text(t.logout),
           ),
           const SizedBox(height: 8),
           TextButton(
@@ -174,8 +176,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 }
               }
             },
-            child: const Text('Delete Account',
-                style: TextStyle(color: Colors.red)),
+            child: Text(t.deleteAccount,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/utils/validators.dart';
 import '../providers/auth_provider.dart';
@@ -53,6 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(stringsProvider);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -63,42 +65,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(),
-                const Text(
-                  'CareBuddy',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                Text(
+                  t.appName,
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Your AI Health Assistant',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                Text(
+                  t.appTagline,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: Validators.validateEmail,
+                  decoration: InputDecoration(labelText: t.loginEmail),
+                  validator: (v) => Validators.validateEmail(v, t),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  validator: Validators.validatePassword,
+                  decoration: InputDecoration(labelText: t.loginPassword),
+                  validator: (v) => Validators.validatePassword(v, t),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Sign In'),
+                      : Text(t.signIn),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.push('/register'),
-                  child: const Text("Don't have an account? Sign Up"),
+                  child: Text(t.noAccountSignUp),
                 ),
                 const Spacer(),
               ],

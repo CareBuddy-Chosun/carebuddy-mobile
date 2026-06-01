@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/session_repository.dart';
 import '../../../../shared/models/session_models.dart';
@@ -41,16 +42,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   }
 
   Future<void> _deleteSession() async {
+    final t = ref.read(stringsProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Session'),
-        content: const Text('This will permanently delete this session and all its data.'),
+        title: Text(t.deleteSession),
+        content: Text(t.deleteSessionDetailContent),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(t.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -72,15 +74,16 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(stringsProvider);
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Session Detail')),
+        appBar: AppBar(title: Text(t.sessionDetail)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Session Detail')),
+        appBar: AppBar(title: Text(t.sessionDetail)),
         body: Center(child: Text(_error!)),
       );
     }
@@ -88,12 +91,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final session = _session!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(session.primarySymptomTag ?? 'Session Detail'),
+        title: Text(session.primarySymptomTag ?? t.sessionDetail),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: _deleteSession,
-            tooltip: 'Delete Session',
+            tooltip: t.deleteSession,
           ),
         ],
       ),
@@ -109,7 +112,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               if (session.durationSeconds != null) ...[
                 const Text(' \u00b7 ',
                     style: TextStyle(color: AppTheme.textSecondary)),
-                Text('${(session.durationSeconds! / 60).ceil()} min',
+                Text(t.minutesShort((session.durationSeconds! / 60).ceil()),
                     style: const TextStyle(color: AppTheme.textSecondary)),
               ],
               const Spacer(),
@@ -122,7 +125,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  session.status.toUpperCase(),
+                  session.status == 'active'
+                      ? t.statusActive
+                      : session.status.toUpperCase(),
                   style: TextStyle(
                     fontSize: 12,
                     color: session.status == 'active'
@@ -148,8 +153,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
           // Messages
           const SizedBox(height: 8),
-          const Text('Conversation',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(t.conversation,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 8),
           ...session.messages.map((m) => _MessageTile(message: m)),
         ],
