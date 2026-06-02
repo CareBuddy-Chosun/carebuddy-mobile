@@ -138,6 +138,8 @@ abstract class AppStrings {
   String get languageSectionSubtitle;
   String get emergencyGuardians;
   String guardiansConfigured(int count);
+  String guardiansNotifiedDemo(int count);
+  String get noGuardiansRegistered;
   String get logout;
   String get deleteAccount;
 
@@ -373,6 +375,11 @@ class _KoStrings extends AppStrings {
   String get emergencyGuardians => '비상 보호자';
   @override
   String guardiansConfigured(int count) => '$count/2명 등록됨';
+  @override
+  String guardiansNotifiedDemo(int count) =>
+      '보호자 $count명에게 알림을 보냈습니다. (데모 — 실제 SMS는 발송되지 않습니다)';
+  @override
+  String get noGuardiansRegistered => '등록된 보호자가 없습니다. 프로필에서 추가해 주세요.';
   @override
   String get logout => '로그아웃';
   @override
@@ -635,6 +642,12 @@ class _EnStrings extends AppStrings {
   String get emergencyGuardians => 'Emergency Guardians';
   @override
   String guardiansConfigured(int count) => '$count/2 configured';
+  @override
+  String guardiansNotifiedDemo(int count) =>
+      'Notified $count guardian(s). (Demo — no real SMS is sent)';
+  @override
+  String get noGuardiansRegistered =>
+      'No guardians registered. Add one in your profile.';
   @override
   String get logout => 'Logout';
   @override

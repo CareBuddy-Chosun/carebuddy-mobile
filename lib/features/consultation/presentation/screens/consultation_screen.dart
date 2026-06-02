@@ -272,6 +272,24 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
     await _startListening();
   }
 
+  /// Notify guardians and show a confirmation. SMS is stubbed on the backend,
+  /// so we surface how many guardians *would* be notified (or prompt to add
+  /// one) instead of leaving the button silent.
+  Future<void> _notifyGuardians() async {
+    final count =
+        await ref.read(consultationProvider.notifier).notifyGuardians();
+    if (!mounted || count < 0) return; // <0 → error already surfaced
+    final t = ref.read(stringsProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          count > 0 ? t.guardiansNotifiedDemo(count) : t.noGuardiansRegistered,
+        ),
+        backgroundColor: count > 0 ? Colors.green.shade700 : Colors.orange.shade800,
+      ),
+    );
+  }
+
   void _toggleVoiceMode() {
     final next = !_voiceMode;
     setState(() => _voiceMode = next);
@@ -345,8 +363,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           // Emergency banner
           if (state.isEmergency)
             EmergencyBanner(
-              onNotifyGuardians: () =>
-                  ref.read(consultationProvider.notifier).notifyGuardians(),
+              onNotifyGuardians: _notifyGuardians,
               onFindHospitals: () => context.push('/hospitals',
                   extra: {'level': 'EMERGENCY', 'department': null}),
             ),
@@ -366,11 +383,7 @@ class _ConsultationScreenState extends ConsumerState<ConsultationScreen> {
           if (state.sessionComplete && state.triageResult != null)
             TriageDetailCard(
               triageResult: state.triageResult!,
-              onNotifyGuardians: state.isEmergency
-                  ? () => ref
-                      .read(consultationProvider.notifier)
-                      .notifyGuardians()
-                  : null,
+              onNotifyGuardians: state.isEmergency ? _notifyGuardians : null,
               onFindHospitals: () => context.push('/hospitals', extra: {
                 'level': state.triageResult!.level,
                 'department': state.triageResult!.recommendedDepartment,
