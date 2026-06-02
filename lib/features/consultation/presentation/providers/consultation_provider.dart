@@ -191,14 +191,19 @@ class ConsultationNotifier extends StateNotifier<ConsultationState> {
     }
   }
 
-  Future<void> notifyGuardians() async {
-    if (state.sessionId == null) return;
+  /// Triggers guardian notification. Returns the number of guardians notified
+  /// (0 if none registered), or -1 on error. SMS delivery is stubbed on the
+  /// backend — the count reflects who *would* be notified.
+  Future<int> notifyGuardians() async {
+    if (state.sessionId == null) return -1;
     final repo = _ref.read(sessionRepositoryProvider);
     try {
-      await repo.notifyGuardians(state.sessionId!);
+      final response = await repo.notifyGuardians(state.sessionId!);
+      return response.notifications.length;
     } catch (e) {
       final msg = e is ApiException ? e.userMessage : e.toString();
       state = state.copyWith(error: msg);
+      return -1;
     }
   }
 }
